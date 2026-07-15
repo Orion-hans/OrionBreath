@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Orion's Breath — Sum Wave Sound Meditation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070a16; --bg2:#0c1126; --panel:rgba(146,160,205,.06); --panel-bd:rgba(160,176,222,.14);
+  --aurora1:#46c7a6; --aurora2:#6c7bd6; --aurora3:#b98cd9;
+  --star:#eef1fb; --muted:#8a96bb; --line:rgba(160,176,222,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--star);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  overflow-x:hidden;overflow-y:auto;min-height:100%;position:relative}
+#aurora{position:fixed;inset:0;z-index:0;display:block}
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:26px 18px 60px;min-height:100vh;
+  display:flex;flex-direction:column}
+header{text-align:center;margin:20px 0 4px}
+.brand{font-family:"Cinzel",Georgia,serif;font-weight:600;letter-spacing:.06em;white-space:nowrap;
+  font-size:clamp(23px,6.2vw,44px);margin:0;line-height:1.15;
+  background:linear-gradient(100deg,var(--aurora1),var(--aurora2) 52%,var(--aurora3));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(108,123,214,.34))}
+.brand .ap{font-weight:600}
+.tag{color:var(--muted);font-size:12.5px;letter-spacing:.32em;margin-top:6px;text-transform:uppercase}
+
+/* breathing orb */
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:18px 0 8px;flex:0 0 auto}
+.orb{position:relative;width:200px;height:200px;border:none;background:none;cursor:pointer;padding:0;outline:none}
+.orb .ring{position:absolute;inset:0;border-radius:50%}
+.orb .glow{position:absolute;inset:-30%;border-radius:50%;
+  background:radial-gradient(circle at 50% 45%,rgba(70,199,166,.5),rgba(108,123,214,.28) 40%,rgba(185,140,217,.12) 62%,transparent 72%);
+  filter:blur(6px);opacity:.7;transition:opacity .6s, transform .3s ease-out}
+.orb .core{position:absolute;inset:30%;border-radius:50%;transition:transform .22s ease-out;
+  background:radial-gradient(circle at 42% 38%,#f4f7ff,#bcdfe0 30%,#7e8fd8 64%,#3a3f73 100%);
+  box-shadow:0 0 50px rgba(124,140,220,.5), inset 0 0 30px rgba(255,255,255,.35)}
+.orb .halo{position:absolute;inset:8%;border-radius:50%;border:1px solid rgba(180,200,255,.22)}
+.orb-label{margin-top:16px;color:var(--muted);font-size:12px;letter-spacing:.3em;text-transform:uppercase}
+.orb-sub{margin-top:4px;color:var(--muted);font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
+
+/* moods */
+.moods{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0 8px}
+.mood{padding:13px 10px;border:1px solid var(--panel-bd);background:var(--panel);border-radius:15px;cursor:pointer;
+  text-align:left;transition:.2s;backdrop-filter:blur(8px)}
+.mood:hover{border-color:rgba(108,123,214,.5)}
+.mood.sel{border-color:rgba(70,199,166,.7);background:rgba(70,199,166,.10);box-shadow:0 0 0 1px rgba(70,199,166,.25)}
+.mood .mn{font-family:"Cormorant Garamond",Georgia,serif;font-size:20px;font-weight:400;letter-spacing:.02em}
+.swcode{display:inline-block;font-family:system-ui,-apple-system,sans-serif;font-variant-numeric:lining-nums;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#8fa8c8;background:rgba(120,150,200,.14);border:1px solid rgba(120,150,200,.25);border-radius:6px;padding:1px 7px;margin-bottom:4px}
+.mood .md{color:var(--muted);font-size:10.5px;letter-spacing:.06em;margin-top:2px}
+
+/* panel */
+.panel{border:1px solid var(--panel-bd);background:var(--panel);border-radius:18px;padding:16px 16px 6px;margin-top:12px;backdrop-filter:blur(10px)}
+.ph{display:flex;align-items:center;justify-content:space-between;cursor:pointer;color:var(--muted);font-size:12px;letter-spacing:.22em;text-transform:uppercase;padding-bottom:8px}
+.ph .ch{transition:.3s}.panel.closed .ph .ch{transform:rotate(-90deg)}
+.panel.closed .pbody{display:none}
+.subsec{border:1px solid var(--panel-bd);border-radius:13px;background:rgba(146,160,205,.04);padding:4px 10px 2px;margin-bottom:8px}
+.subsec .sh{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;cursor:pointer;font-size:12.5px;color:var(--star);user-select:none}
+.subsec .sh .shz{color:var(--muted);font-size:11px}
+.subsec .ch{transition:.3s}.subsec.closed .ch{transform:rotate(-90deg)}
+.subsec.closed .sbody{display:none}
+.subsec .sbody{padding-bottom:4px}
+.row{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:none}
+.row .lab{width:84px;flex:0 0 auto;font-size:12.5px;color:var(--muted);letter-spacing:.04em}
+.row .val{width:60px;flex:0 0 auto;text-align:right;font-size:12px;color:var(--star);font-variant-numeric:tabular-nums;opacity:.85}
+input[type=range]{-webkit-appearance:none;appearance:none;height:3px;border-radius:3px;flex:1;
+  background:linear-gradient(90deg,var(--aurora2),var(--aurora1));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:#eef1fb;box-shadow:0 0 10px rgba(124,140,220,.8);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border:none;border-radius:50%;background:#eef1fb;box-shadow:0 0 10px rgba(124,140,220,.8);cursor:pointer}
+select{flex:1;background:#0e1430;color:var(--star);border:1px solid var(--panel-bd);border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;outline:none}
+.tg{flex:1;background:#0e1430;color:var(--muted);border:1px solid var(--panel-bd);border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;cursor:pointer;transition:.18s;text-align:center}
+.tg.on{color:var(--star);border-color:rgba(70,199,166,.55);background:rgba(70,199,166,.10)}
+.layers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 0 4px}
+.lyr{display:flex;align-items:center;gap:7px;padding:9px 10px;border:1px solid var(--panel-bd);border-radius:11px;background:rgba(146,160,205,.04);cursor:pointer;font-size:12.5px;color:var(--muted);transition:.18s}
+.lyr.on{color:var(--star);border-color:rgba(70,199,166,.55);background:rgba(70,199,166,.09)}
+.lyr .dot{width:7px;height:7px;border-radius:50%;background:rgba(140,150,180,.4)}
+.lyr.on .dot{background:var(--aurora1);box-shadow:0 0 8px var(--aurora1)}
+
+/* transport */
+.bar{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+button.btn{flex:1;min-width:84px;padding:13px 12px;border-radius:13px;border:1px solid var(--panel-bd);background:var(--panel);
+  color:var(--star);font-size:13px;font-family:inherit;letter-spacing:.04em;cursor:pointer;transition:.18s;backdrop-filter:blur(8px)}
+button.btn:hover{border-color:rgba(108,123,214,.55)}
+button.btn.primary{background:linear-gradient(100deg,rgba(70,199,166,.22),rgba(108,123,214,.22));border-color:rgba(70,199,166,.5)}
+button.btn:disabled{opacity:.4;cursor:default}
+button.btn.sm{flex:0 0 auto;min-width:0;padding:13px 16px}
+.foot{color:var(--muted);font-size:11px;text-align:center;margin-top:20px;letter-spacing:.05em;line-height:1.7;opacity:.8}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:5;
+  background:rgba(14,20,48,.95);border:1px solid var(--panel-bd);color:var(--star);padding:11px 18px;border-radius:12px;
+  font-size:13px;opacity:0;pointer-events:none;transition:.3s;backdrop-filter:blur(10px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:520px){.orb{width:172px;height:172px}
+  .mood{padding:10px 7px}.mood .mn{font-size:16px}.mood .md{font-size:9px;letter-spacing:.02em}
+  .lyr{padding:8px 7px;font-size:11px;gap:5px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<canvas id="aurora"></canvas>
+<div class="wrap">
+  <header>
+    <h1 class="brand">Orion&rsquo;s Breath</h1>
+    <div class="tag">Sum Wave &middot; Sound Meditation</div>
+  </header>
+
+  <div class="stage">
+    <button class="orb" id="orb" aria-label="재생/정지">
+      <div class="glow" id="glow"></div>
+      <div class="halo"></div>
+      <div class="core" id="core"></div>
+    </button>
+    <div class="orb-label" id="orbLabel">눌러서 시작</div>
+    <div class="orb-sub" id="breathCue" style="letter-spacing:.25em;min-height:16px"></div>
+    <div class="orb-sub" id="orbSub">—</div>
+  </div>
+
+  <div class="bar">
+    <button class="btn" id="recommend" title="이 무드로 랜덤 추천">✨ 추천</button>
+    <button class="btn" id="reseed" title="새 시드(같은 설정·다른 변주)">🎲 시드</button>
+    <button class="btn" id="reset" title="기본값으로 초기화">↺ 초기화</button>
+  </div>
+
+  <div class="moods" id="moods"></div>
+
+  <div class="panel" id="composePanel">
+    <div class="ph" id="composeHead"><span>사운드 디자인</span><span class="ch">▾</span></div>
+    <div class="pbody">
+      <div class="subsec closed" id="genSec">
+        <div class="sh" id="genHead"><span>음향 · 조성 <span class="shz">(변경 시 새로 생성)</span></span><span class="ch">▾</span></div>
+        <div class="sbody">
+          <div class="row"><div class="lab">조성</div><select id="root"></select><select id="mode"></select></div>
+          <div class="row"><div class="lab">화성</div><select id="harmony"><option value="evolving">진행 (천천히 변화)</option><option value="static">정적 (토닉 드론)</option></select></div>
+          <div class="row"><div class="lab">튜닝</div><select id="tuning"><option value="440">A = 440 Hz (표준)</option><option value="432">A = 432 Hz (명상)</option></select></div>
+          <div class="row"><div class="lab">뇌파</div><select id="binaural"><option value="off">바이노럴 끄기</option><option value="delta">델타 2.5Hz (깊은 수면)</option><option value="theta">세타 6Hz (명상)</option><option value="alpha">알파 10Hz (이완)</option></select></div>
+          <div class="row"><div class="lab">솔페지오</div><select id="solfeggio"><option value="off">없음</option><option value="396">396 Hz (해방)</option><option value="417">417 Hz (변화)</option><option value="528">528 Hz (치유)</option><option value="639">639 Hz (관계)</option><option value="741">741 Hz (정화)</option><option value="852">852 Hz (직관)</option></select></div>
+        </div>
+      </div>
+      <div class="subsec" id="swSec">
+        <div class="sh" id="swHead"><span>숨 웨이브 세션 드론 <span class="shz">(3악기 × 3테마)</span></span><span class="ch">▾</span></div>
+        <div class="sbody">
+          <div class="moods" id="swGrid" style="margin:6px 0 8px"></div>
+          <div class="row"><div class="lab">드론 루트</div><select id="swRoot"></select><select id="swOct"><option value="-12">낮게 (-1옥타브)</option><option value="0">기본 (C2 부근)</option><option value="12">높게 (+1옥타브)</option></select></div>
+          <div class="row"><div class="lab">세션 모드</div><select id="swLen"><option value="30">30분</option><option value="50" selected>50분</option><option value="70">70분</option></select><button class="bt" id="swSession">세션 모드 시작</button></div>
+          <div class="row"><div class="lab">만월 스킨</div><label class="sw"><input type="checkbox" id="swMoon"><span class="knob"></span></label><span class="hint">고역이 열리고 잔향 꼬리가 길어집니다</span></div>
+          <div id="swStatus" style="font-size:13px;color:var(--gold,#D8C39A);letter-spacing:.04em;min-height:18px;margin:2px 0 4px;"></div>
+        </div>
+      </div>
+      <div class="subsec" id="instSec">
+        <div class="sh" id="instHead"><span>악기 선택</span><span class="ch">▾</span></div>
+        <div class="sbody">
+          <div class="layers" id="layers"></div>
+          <div class="row"><div class="lab">벨·핸드팬 음역</div><select id="bellOct"><option value="-24">아주 낮게 (-2옥타브)</option><option value="-12">낮게 (-1옥타브)</option><option value="0">기본</option><option value="12">높게 (+1옥타브)</option></select></div>
+          <div class="row"><div class="lab">띵샤 음역</div><select id="tingOct"><option value="-12">낮게 (-1옥타브)</option><option value="0">기본</option><option value="12">높게 (+1옥타브)</option></select></div>
+        </div>
+      </div>
+      <div class="row"><div class="lab">호흡 가이드</div><select id="breath"><option value="off">없음</option><option value="coherent">코히런트 5.5초</option><option value="six">느리게 6·6</option><option value="box">박스 4·4·4·4</option><option value="b478">4-7-8</option><option value="ext46">날숨 연장 4·6</option><option value="ext48">깊은 날숨 4·8</option><option value="sigh">이중 들숨 한숨 4·1·8</option></select></div>
+      <div class="row"><div class="lab">슬립 타이머</div><select id="sleep"><option value="0">끄기</option><option value="10">10분</option><option value="20">20분</option><option value="30">30분</option><option value="45">45분</option><option value="60">60분</option></select></div>
+      <div class="row"><div class="lab">흐름</div><input type="range" id="pace" min="4" max="20" step="1" value="9"><div class="val" id="paceV">9초</div></div>
+      <div class="row"><div class="lab">길이</div><input type="range" id="len" min="1" max="10" step="1" value="3"><div class="val" id="lenV">3분</div></div>
+      <div class="row"><div class="lab">공간감</div><input type="range" id="space" min="0" max="100" step="1" value="70"><div class="val" id="spaceV">70</div></div>
+      <div class="row"><div class="lab">밝기</div><input type="range" id="bright" min="0" max="100" step="1" value="46"><div class="val" id="brightV">46</div></div>
+      <div class="row"><div class="lab">움직임</div><input type="range" id="move" min="0" max="100" step="1" value="40"><div class="val" id="moveV">40</div></div>
+      <div class="row"><div class="lab">자동 변화 <span class="shz">공간·밝기</span></div><button class="tg" id="autoEvolve">꺼짐</button></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="btn primary" id="play">재생</button>
+    <button class="btn" id="loop">반복 끄기</button>
+  </div>
+  <div class="bar">
+    <button class="btn" id="wav">WAV 내보내기</button>
+    <button class="btn" id="midi">MIDI 내보내기</button>
+  </div>
+
+  <div class="foot">숨 웨이브 세션 드론 + 제너러티브 앰비언트 엔진.<br>세션 드론 프리셋은 심리스 루프 · 48kHz/24bit WAV로 렌더됩니다. SOUND OASIS LAB.</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const NOTE=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+/* 모드(음계) 정의 — 인터벌 + 분위기 */
+const MODES={
+  ionian:{ko:'아이오니안 (메이저)',iv:[0,2,4,5,7,9,11]},
+  lydian:{ko:'리디안 (밝은·영화적)',iv:[0,2,4,6,7,9,11]},
+  mixolydian:{ko:'믹솔리디안 (따뜻한)',iv:[0,2,4,5,7,9,10]},
+  dorian:{ko:'도리안 (잔잔·서정)',iv:[0,2,3,5,7,9,10]},
+  aeolian:{ko:'에올리안 (마이너)',iv:[0,2,3,5,7,8,10]},
+  phrygian:{ko:'프리지안 (어둡고 긴장)',iv:[0,1,3,5,7,8,10]},
+  pentaMaj:{ko:'펜타토닉 (장)',iv:[0,2,4,7,9]},
+  pentaMin:{ko:'펜타토닉 (단)',iv:[0,3,5,7,10]}
+};
+/* 무드 프리셋 — 음계·흐름·레이어·음색 톤 */
+const MOODS={
+  stillness:{ko:'Stillness',en:'명상',mode:'aeolian',pace:14,space:84,bright:30,move:18,harmony:'static',binaural:'theta',breath:'coherent',
+    layers:{drone:1,pad:1,bell:1,sub:1,air:1,shimmer:0,melody:0,strings:1},bellDecay:7,prog:[0,5,3,5]},
+  drift:{ko:'Drift',en:'앰비언트',mode:'lydian',pace:9,space:72,bright:52,move:42,harmony:'evolving',binaural:'off',breath:'off',
+    layers:{drone:1,pad:1,bell:1,sub:1,air:1,shimmer:1,melody:1,strings:0},bellDecay:5,prog:[0,1,5,3]},
+  aurora:{ko:'Aurora',en:'몽환',mode:'pentaMaj',pace:8,space:80,bright:60,move:50,harmony:'evolving',binaural:'off',breath:'off',
+    layers:{drone:1,pad:1,bell:1,sub:0,air:1,shimmer:1,melody:1,strings:0},bellDecay:6,prog:[0,3,1,4]},
+  tides:{ko:'Tides',en:'잔잔',mode:'dorian',pace:10,space:66,bright:44,move:38,harmony:'evolving',binaural:'off',breath:'off',
+    layers:{drone:1,pad:1,bell:1,sub:1,air:1,shimmer:0,melody:1,strings:1},bellDecay:5,prog:[0,5,3,1]},
+  tension:{ko:'Tension',en:'긴장',mode:'phrygian',pace:12,space:74,bright:34,move:46,harmony:'evolving',binaural:'off',breath:'off',
+    layers:{drone:1,pad:1,bell:0,sub:1,air:1,shimmer:0,melody:0,strings:1},bellDecay:4,prog:[0,1,5,1]},
+  bowls:{ko:'Bowls',en:'싱잉볼',mode:'pentaMin',pace:16,space:88,bright:38,move:30,harmony:'static',binaural:'theta',breath:'coherent',
+    layers:{drone:1,pad:0,bell:1,sub:1,air:1,shimmer:0,melody:0,strings:0},bellDecay:9,prog:[0,3,0,4]}
+};
+/* 숨 웨이브 세션 드론 프리셋 — 3악기 × 3테마 (설계서 §10)
+   voicing: 'r5' = 루트+순5도(3도 배제), 'root' = 루트 단음
+   pulse: {bpm, depth} — B3 테마용 진폭 LFO */
+const SW_LAYERS_OFF={drone:0,pad:0,choir:0,strings:0,gong:0,bell:0,handpan:0,tingsha:0,melody:0,sub:0,air:0,shimmer:0};
+const SUMWAVE={
+  a1b1:{ko:'A1×B1 싱잉볼·고요',md:'C · 웜 패드 루트+5도',root:0,voicing:'r5',pulse:null,
+    pace:16,space:82,bright:30,move:10,layers:{drone:1,sub:1,pad:1,air:1}},
+  a1b2:{ko:'A1×B2 싱잉볼·멈춤',md:'C · 순5도 미니멀',root:0,voicing:'r5',pulse:null,
+    pace:18,space:74,bright:18,move:6,layers:{drone:1,sub:1}},
+  a1b3:{ko:'A1×B3 싱잉볼·정렬',md:'C · 심박 펄스 55',root:0,voicing:'r5',pulse:{bpm:55,depth:0.12},
+    pace:14,space:76,bright:26,move:10,layers:{drone:1,sub:1,pad:1}},
+  a2b1:{ko:'A2×B1 핸드팬·고요',md:'D · 팬 키 웜',root:2,voicing:'r5',pulse:null,
+    pace:15,space:80,bright:34,move:10,layers:{drone:1,sub:1,pad:1,air:1}},
+  a2b2:{ko:'A2×B2 핸드팬·멈춤',md:'D · 서스테인 온리',root:2,voicing:'r5',pulse:null,
+    pace:18,space:72,bright:22,move:6,layers:{drone:1,sub:1}},
+  a2b3:{ko:'A2×B3 핸드팬·정렬',md:'D · 캣카우 스웰',root:2,voicing:'r5',pulse:{bpm:6,depth:0.15},
+    pace:14,space:76,bright:30,move:10,layers:{drone:1,sub:1,pad:1}},
+  a3b1:{ko:'A3×B1 띵샤·고요',md:'A · 저역 파도',root:9,voicing:'r5',pulse:null,
+    pace:16,space:88,bright:24,move:12,layers:{drone:1,sub:1,air:1}},
+  a3b2:{ko:'A3×B2 띵샤·멈춤',md:'C · 루트 단음',root:0,voicing:'root',pulse:null,
+    pace:18,space:70,bright:14,move:6,layers:{drone:1,sub:1}},
+  a3b3:{ko:'A3×B3 띵샤·정렬',md:'A · 저역 미세 리듬',root:9,voicing:'r5',pulse:{bpm:70,depth:0.08},
+    pace:14,space:78,bright:22,move:10,layers:{drone:1,sub:1,air:1}},
+  tea:{ko:'티 서클 · 종료 후',md:'D 메이저 펜타 · 대화 배경',root:2,voicing:'full',harmony:'evolve',mode:'pentaMaj',pulse:null,
+    pace:12,space:58,bright:56,move:32,layers:{pad:1,bell:1,air:1}}
+};
+const LAYERS=[['drone','드론'],['pad','패드'],['choir','합창'],['strings','로우 현악'],['gong','대형 공'],['bell','벨/볼'],['handpan','핸드팬'],['tingsha','띵샤'],['melody','멜로디'],['sub','서브'],['air','대기음'],['shimmer','샤이머']];
+
+function defaults(){return {mood:'drift',root:9,mode:'lydian',pace:9,len:3,space:70,bright:46,move:40,tuning:440,harmony:'evolving',binaural:'off',
+  solfeggio:'off',breath:'off',sleepMin:0,bellOct:0,tingOct:0,autoEvolve:false,sumwave:null,droneVoicing:'full',pulse:null,swOct:0,moon:false,
+  layers:Object.assign({},MOODS.drift.layers),prog:MOODS.drift.prog.slice(),seed:(Math.random()*1e9)|0,loop:true};}
+let state=defaults();
+
+/* ---------- 음악 생성 ---------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const scalePcs=()=>MODES[state.mode].iv.map(x=>(state.root+x)%12);
+// 모드 음계 위 다이어토닉 스택(루트·3·5·7) — 항상 음계 안
+function modalChord(deg){const iv=MODES[state.mode].iv,n=iv.length,pcs=[];for(const k of [0,2,4,6]){const i=(deg+k)%n;pcs.push((state.root+iv[i])%12);}return pcs;}
+function voiceLead(pcs,prev){let v=pcs.map((pc,i)=>{let m=60+pc;while(m<57)m+=12;return m;});
+  // 펼친 보이싱(겹침 줄임) 후 이전 화음에 가깝게 옥타브 이동
+  v=[...new Set(v)].sort((a,b)=>a-b);
+  v=v.map((m,i)=>m+ (i>=2?0:0)); // base
+  // 레지스터 ~55..82
+  v=v.map(m=>{while(m>82)m-=12;while(m<55)m+=12;return m;});
+  if(prev&&prev.length){const center=prev.reduce((a,b)=>a+b,0)/prev.length;
+    v=v.map(m=>{let best=m,bd=1e9;for(let o=-12;o<=24;o+=12){const c=m+o;if(c>=52&&c<=84&&Math.abs(c-center)<bd){bd=Math.abs(c-center);best=c;}}return best;});}
+  return [...new Set(v)].sort((a,b)=>a-b);
+}
+function generate(){
+  const rng=mulberry(state.seed);
+  const lengthSec=state.len*60, pace=state.pace;
+  let tonic=36+state.root; // 드론 토닉(낮게)
+  if(state.droneVoicing&&state.droneVoicing!=='full')tonic+=(state.swOct||0);
+  const sc=scalePcs();
+  const chords=[];
+  if(state.droneVoicing&&state.droneVoicing!=='full'){
+    /* 숨 웨이브 보이싱 — 3도 배제. r5: 루트+5도+옥타브, root: 루트+옥타브 */
+    const r=tonic;
+    const midis=state.droneVoicing==='root'?[r+12,r+24]:[r+12,r+19,r+24];
+    chords.push({t:0,dur:lengthSec,midis,deg:0});
+  } else if(state.harmony==='static'){                          // 진행 없이 토닉 하나를 길게 — 정적 드론 명상
+    chords.push({t:0,dur:lengthSec,midis:voiceLead(modalChord(0),null),deg:0});
+  } else {
+    let prog=state.prog.slice();
+    if(rng()<0.5){const pool=[0,3,5,1,4];prog=prog.map(d=>rng()<0.3?pool[(rng()*pool.length)|0]:d);}
+    /* 호흡 가이드가 켜져 있으면 코드 길이를 호흡 사이클의 정수배로 —
+       짧은 호흡(≈10초)은 4~5회, 긴 호흡(4-7-8=19초)은 2회에 한 번 전환.
+       코드 전환이 항상 들숨 시작과 일치한다. */
+    let chordDur=pace;
+    const bp=BREATH[state.breath];
+    if(bp){
+      const cyc=bp.reduce((a,p)=>a+p[1],0);
+      const k=Math.min(5,Math.max(2,Math.round(45/cyc)));
+      chordDur=k*cyc;
+    }
+    let t=0,i=0,prev=null;
+    while(t<lengthSec){const deg=prog[i%prog.length];const pcs=modalChord(deg);const midis=voiceLead(pcs,prev);prev=midis;
+      chords.push({t,dur:chordDur,midis,deg});t+=chordDur;i++;}
+    /* 루프 봉합 — 마지막 코드를 첫 코드와 동일 보이싱의 토닉으로.
+       이음새가 같은 화음↔같은 화음이 되어 어디서 돌아와도 어색하지 않다. */
+    if(chords.length>1){
+      const lastC=chords[chords.length-1];
+      lastC.deg=chords[0].deg;
+      lastC.midis=chords[0].midis.slice();
+    }
+  }
+  // 벨/볼: 펜타토닉 음 위에서 확률적 배치
+  let pentaPc=[...new Set([sc[0],sc[2],sc[4],sc[1%sc.length],sc[Math.min(5,sc.length-1)]])];
+  if(state.droneVoicing&&state.droneVoicing!=='full'){
+    pentaPc=state.droneVoicing==='root'?[state.root%12]:[state.root%12,(state.root+7)%12];
+  }
+  const bellReg=p=>{let m=72+((p-state.root+12)%12);while(m<67)m+=12;while(m>88)m-=12;return m;};
+  const bells=[];const dens=0.18+state.move/100*0.62;
+  let bt=2+rng()*3, last=null;
+  const md=MOODS[state.mood]?MOODS[state.mood].bellDecay:5;
+  while(bt<lengthSec-1){
+    let pc=pentaPc[(rng()*pentaPc.length)|0];let m=bellReg(pc);
+    if(last!=null){while(m-last>9)m-=12;while(last-m>9)m+=12;if(m<64)m+=12;if(m>89)m-=12;}
+    bells.push({t:bt,midi:m,decay:md*(0.8+rng()*0.5)});last=m;
+    const gap=(1.4+rng()*4.0)/(0.5+dens); bt+=gap;
+  }
+  const piece={lengthSec,pace,tonic,chords,bells,sc};
+  piece.melody=(state.droneVoicing&&state.droneVoicing!=='full')?[]:genMelody(rng,piece);
+  return piece;
+}
+/* 멜로디 — 느리고 여백 있는 떠다니는 선율(긴 음 + 쉼) */
+function genMelody(rng,piece){
+  const sc=piece.sc;
+  const inReg=m=>{while(m<66)m+=12;while(m>86)m-=12;return m;};
+  const fromPc=pc=>inReg(72+((pc-state.root+12)%12));
+  const chordAt=t=>{for(let i=piece.chords.length-1;i>=0;i--)if(piece.chords[i].t<=t+1e-6)return piece.chords[i];return piece.chords[0];};
+  const mel=[];let t=3+rng()*5,last=null;const open=1-state.move/100;
+  while(t<piece.lengthSec-3){
+    const ch=chordAt(t),ctones=[...new Set(ch.midis.map(m=>m%12))];
+    let cand;
+    if(last==null)cand=fromPc(ctones[(rng()*ctones.length)|0]);
+    else if(rng()<0.62){const opts=ctones.map(fromPc);cand=opts.reduce((p,c)=>Math.abs(c-last)<Math.abs(p-last)?c:p,opts[0]);} // 긴 음: 화음음
+    else{const opts=sc.map(fromPc).filter(n=>Math.abs(n-last)<=3&&n!==last);cand=opts.length?opts[(rng()*opts.length)|0]:last;} // 음계 스텝
+    if(last!=null){while(cand-last>9)cand-=12;while(last-cand>9)cand+=12;}
+    cand=inReg(cand);
+    const dur=2.5+rng()*4;                                // 긴 음(2.5~6.5초)
+    mel.push({t,midi:cand,dur});last=cand;
+    t+=dur+(1.2+rng()*4.5)*(0.5+open);                    // 음 사이 여백(움직임 낮을수록 더 비움)
+  }
+  return mel;
+}
+
+/* ---------- 오디오 엔진 (라이브 & 오프라인 공용) ---------- */
+const f2m=m=>(state.tuning||440)*Math.pow(2,(m-69)/12);
+function makeImpulse(ac,dur,decay,predelay){const rate=ac.sampleRate,pre=((predelay||0)*rate)|0,len=((rate*dur)|0)+pre,b=ac.createBuffer(2,len,rate);
+  for(let c=0;c<2;c++){const d=b.getChannelData(c);let lp=0;
+    for(let i=0;i<len;i++){if(i<pre){d[i]=0;continue;}
+      const t=(i-pre)/(len-pre),w=Math.random()*2-1,a=0.2+0.74*t; // 시간이 갈수록 강한 로우패스 → 어둡고 매끄러운 테일
+      lp=lp*a+w*(1-a);d[i]=lp*Math.pow(1-t,decay);}}
+  return b;}
+function makeNoise(ac){const len=ac.sampleRate*3,b=ac.createBuffer(1,len,ac.sampleRate),d=b.getChannelData(0);
+  let lp=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;lp=lp*0.96+w*0.04;d[i]=lp*3.2;}return b;} // 부드러운(브라운계) 노이즈
+
+function buildGraph(ac){
+  const master=ac.createGain();master.gain.value=0.0;
+  // 마스터 글루: 전역 톤(밝기 실시간) → 저중역 정리 → 공기감 → 새추레이션 → 글루 컴프 → 리미터 → 출력
+  const tone=ac.createBiquadFilter();tone.type='lowpass';tone.frequency.value=toneFreq();tone.Q.value=0.4;
+  const lowcut=ac.createBiquadFilter();lowcut.type='peaking';lowcut.frequency.value=300;lowcut.Q.value=0.8;lowcut.gain.value=-2.5;
+  const airsh=ac.createBiquadFilter();airsh.type='highshelf';airsh.frequency.value=8000;airsh.gain.value=2;
+  const sat=ac.createWaveShaper();const cv=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/512-1;cv[i]=Math.tanh(x*1.15);}sat.curve=cv;sat.oversample='2x';
+  const comp=ac.createDynamicsCompressor();comp.threshold.value=-20;comp.ratio.value=2.2;comp.attack.value=0.06;comp.release.value=0.45;
+  const limiter=ac.createDynamicsCompressor();limiter.threshold.value=-3;limiter.ratio.value=20;limiter.attack.value=0.003;limiter.release.value=0.15;
+  const sessionG=ac.createGain();sessionG.gain.value=1;
+  master.connect(sessionG);sessionG.connect(tone);tone.connect(lowcut);lowcut.connect(airsh);airsh.connect(sat);sat.connect(comp);comp.connect(limiter);limiter.connect(ac.destination);
+  const spaceAmt=state.space/100;
+  const reverb=ac.createConvolver();reverb.buffer=makeImpulse(ac,3.5+spaceAmt*5.5,2.0,0.02+spaceAmt*0.04);
+  const rhc=ac.createBiquadFilter();rhc.type='lowpass';rhc.frequency.value=5200;rhc.Q.value=0.5; // 리버브 테일 고역 컷(어둡게)
+  const rg=ac.createGain();rg.gain.value=0.5+spaceAmt*0.6;reverb.connect(rhc);rhc.connect(rg);rg.connect(master);
+  const buses={};
+  ['drone','pad','shimmer','bell','handpan','tingsha','sub','air','melody','strings','gong','choir'].forEach(k=>{const g=ac.createGain();g.gain.value=1;buses[k]=g;});
+  // 저음 정리: 상위 레이어는 하이패스 → 드론+서브가 저음 독점(머드 제거)
+  const hp=(bus,f)=>{const b=ac.createBiquadFilter();b.type='highpass';b.frequency.value=f;b.Q.value=0.5;buses[bus].connect(b);b.connect(master);};
+  hp('pad',135);hp('shimmer',400);hp('air',180);hp('melody',120);hp('bell',90);hp('handpan',110);hp('tingsha',1500);
+  let pulseGain=null;
+  if(state.pulse&&state.pulse.bpm>0){
+    /* 숨 웨이브 B3 펄스 — 드론·서브 진폭을 심박/스웰 주기로 미세 요동 */
+    pulseGain=ac.createGain();pulseGain.gain.value=1-state.pulse.depth*0.5;
+    const plfo=ac.createOscillator();plfo.type='sine';plfo.frequency.value=state.pulse.bpm/60;
+    const pld=ac.createGain();pld.gain.value=state.pulse.depth*0.5;
+    plfo.connect(pld);pld.connect(pulseGain.gain);plfo.start(0);
+    pulseGain.connect(master);
+    buses.drone.connect(pulseGain);buses.sub.connect(pulseGain);
+  } else {
+    buses.drone.connect(master);buses.sub.connect(master);
+  }
+  buses.strings.connect(master);buses.gong.connect(master);buses.choir.connect(master);
+  // 패드 앙상블 코러스(폭·일렁임)
+  const chMix=ac.createGain();chMix.gain.value=0.5;chMix.connect(master);
+  [[0.12,0.004,-0.6],[0.17,0.005,0.6]].forEach(([rate,depth,pan])=>{const dl=ac.createDelay();dl.delayTime.value=0.018;
+    const lfo=ac.createOscillator(),ld=ac.createGain();lfo.frequency.value=rate;ld.gain.value=depth;lfo.connect(ld);ld.connect(dl.delayTime);lfo.start(0);
+    const pn=ac.createStereoPanner?ac.createStereoPanner():null;buses.pad.connect(dl);if(pn){pn.pan.value=pan;dl.connect(pn);pn.connect(chMix);}else dl.connect(chMix);});
+  // 리버브 센드(레이어별)
+  const send=(bus,amt)=>{const s=ac.createGain();s.gain.value=amt;buses[bus].connect(s);s.connect(reverb);};
+  send('pad',0.5+spaceAmt*0.4);send('shimmer',0.5);send('bell',0.6+spaceAmt*0.35);send('handpan',0.45+spaceAmt*0.3);send('tingsha',0.7+spaceAmt*0.2);send('air',0.5);send('drone',0.15+spaceAmt*0.2);send('melody',0.45+spaceAmt*0.35);send('strings',0.4+spaceAmt*0.3);send('gong',0.5+spaceAmt*0.3);send('choir',0.45+spaceAmt*0.3);
+  return {master,sessionG,reverb,reverbWet:rg,tone,buses,noise:makeNoise(ac)};
+}
+const toneFreq=()=>2000+Math.pow(state.bright/100,1.3)*16000; // 전역 톤(밝기) 실시간 컷오프
+// 음색 파라미터(밝기)
+const cutoff=()=>700+Math.pow(state.bright/100,1.4)*5200;
+
+function padVoice(ac,G,t,dur,midi,pan){
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=0.6;
+  const base=Math.min(cutoff(),f2m(midi)*6);
+  lp.frequency.setValueAtTime(base*0.6,t);
+  lp.frequency.linearRampToValueAtTime(base,t+dur*0.5);
+  lp.frequency.linearRampToValueAtTime(base*0.7,t+dur);          // 느린 필터 진동
+  const flfo=ac.createOscillator(),fld=ac.createGain();flfo.frequency.value=0.07;fld.gain.value=base*0.16;flfo.connect(fld);fld.connect(lp.frequency);flfo.start(t);flfo.stop(t+dur+6); // 계속 일렁임
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const amp=ac.createGain();
+  const atk=Math.min(3.2,dur*0.45),rel=Math.min(6,dur*0.7);
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.16,t+atk);
+  amp.gain.setValueAtTime(0.16,t+dur*0.7);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
+  lp.connect(amp);if(pn){amp.connect(pn);pn.connect(G);}else amp.connect(G);
+  [-7,-3,4,8].forEach((dt,i)=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=f2m(midi);o.detune.value=dt;
+    const og=ac.createGain();og.gain.value=0.25;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+rel+0.1);});
+}
+function shimmerVoice(ac,G,t,dur,midi,pan){ // 옥타브 위 사인 패드(반짝임)
+  const amp=ac.createGain();const atk=Math.min(4,dur*0.55),rel=Math.min(6,dur*0.7);
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.05,t+atk);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  if(pn){amp.connect(pn);pn.connect(G);}else amp.connect(G);
+  [0,0.1].forEach(dt=>{const o=ac.createOscillator();o.type='sine';o.frequency.value=f2m(midi+12);o.detune.value=dt*40;o.connect(amp);o.start(t);o.stop(t+dur+rel+0.1);});
+}
+function droneVoice(ac,G,t,dur,rootMidi){
+  /* 스테레오 듀얼 패스 드론 — 좌우 독립 필터 LFO(위상차)로 폭과 느린 일렁임 */
+  const amp=ac.createGain();
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.14,t+3);amp.gain.setValueAtTime(0.14,t+dur-4);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  amp.connect(G);
+  const mkChain=(pan,lfoHz,lfoPhaseDelay)=>{
+    const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=Math.min(820,cutoff()*0.6);lp.Q.value=0.5;
+    const lfo=ac.createOscillator(),ld=ac.createGain();
+    lfo.frequency.value=lfoHz;ld.gain.value=130;
+    lfo.connect(ld);ld.connect(lp.frequency);lfo.start(t+lfoPhaseDelay);lfo.stop(t+dur+2);
+    const sh=ac.createWaveShaper();
+    const cv=new Float32Array(256);
+    for(let i=0;i<256;i++){const x=i/128-1;cv[i]=Math.tanh(x*1.3);}
+    sh.curve=cv;
+    const pg=ac.createGain();pg.gain.value=0.5;
+    const pn=ac.createStereoPanner?ac.createStereoPanner():null;
+    lp.connect(sh);sh.connect(pg);
+    if(pn){pn.pan.value=pan;pg.connect(pn);pn.connect(amp);}else pg.connect(amp);
+    return lp;
+  };
+  const lpL=mkChain(-0.28,0.05,0);
+  const lpR=mkChain(0.28,0.063,3.1);
+  /* 루트 유니즌 페어(±3센트 비팅) + 톱니 배음 + 완전5도 + 옥타브 위 에어 */
+  let dparts=[[0,-3,'triangle',0.5],[0,3,'triangle',0.5],[0,0,'sawtooth',0.15],[7,0,'triangle',0.4],[12,-2,'sine',0.12]];
+  if(state.droneVoicing==='root'){dparts=dparts.filter(p=>p[0]===0||p[0]===12);}
+  dparts.forEach(([iv,dt,w,lv],idx)=>{
+    const o=ac.createOscillator();o.type=w;o.frequency.value=f2m(rootMidi+iv);o.detune.value=dt;
+    const og=ac.createGain();og.gain.value=lv;
+    o.connect(og);
+    og.connect(idx%2===0?lpL:lpR);
+    o.start(t);o.stop(t+dur+0.2);
+  });
+}
+function subVoice(ac,G,t,dur,rootMidi){const amp=ac.createGain();
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.22,t+4);amp.gain.setValueAtTime(0.22,t+dur-4);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  const slfo=ac.createOscillator(),sld=ac.createGain();slfo.frequency.value=0.07;sld.gain.value=0.05;slfo.connect(sld);sld.connect(amp.gain);slfo.start(t);slfo.stop(t+dur); // 느린 숨(스웰)
+  amp.connect(G);
+  [0,6].forEach(dt=>{const o=ac.createOscillator();o.type='sine';o.frequency.value=f2m(rootMidi-12);o.detune.value=dt;o.connect(amp);o.start(t);o.stop(t+dur+0.2);}); // 미세 디튠 비팅
+}
+function celloVoice(ac,G,t,dur,midi,pan){ // 보잉 로우 스트링(첼로) — 따뜻한 시네마틱 저음/테너
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=0.7;const base=Math.min(1500+state.bright*8,f2m(midi)*5);
+  lp.frequency.setValueAtTime(base*0.5,t);lp.frequency.linearRampToValueAtTime(base,t+Math.min(2,dur*0.4));
+  const body=ac.createBiquadFilter();body.type='peaking';body.frequency.value=280;body.Q.value=0.9;body.gain.value=3;
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const amp=ac.createGain();const atk=Math.min(1.6,dur*0.35),rel=Math.min(4,dur*0.6);
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.13,t+atk);amp.gain.setValueAtTime(0.13,t+dur*0.7);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
+  lp.connect(body);body.connect(amp);if(pn){amp.connect(pn);pn.connect(G);}else amp.connect(G);
+  [-5,4].forEach(dt=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=f2m(midi);o.detune.value=dt;const og=ac.createGain();og.gain.value=0.3;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+rel+0.1);
+    const vf=ac.createOscillator(),vd=ac.createGain();vf.type='sine';vf.frequency.value=4.6;vd.gain.setValueAtTime(0.0001,t);vd.gain.linearRampToValueAtTime(7,t+Math.min(1.5,dur*0.5));vf.connect(vd);vd.connect(o.detune);vf.start(t);vf.stop(t+dur+rel+0.1);});
+}
+function bellVoice(ac,G,t,midi,decay,pan,noise){ // 싱잉볼/벨 — 말렛 어택 + 비조화 배음 + 비팅 + 긴 감쇠
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const out=ac.createGain();out.gain.value=1;if(pn){out.connect(pn);pn.connect(G);}else out.connect(G);
+  const f=f2m(midi);
+  if(noise){const n=ac.createBufferSource();n.buffer=noise;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f*3;bp.Q.value=2;const ng=ac.createGain();ng.gain.setValueAtTime(0.16,t);ng.gain.exponentialRampToValueAtTime(0.0001,t+0.07);n.connect(bp);bp.connect(ng);ng.connect(out);n.start(t);n.stop(t+0.09);} // 부드러운 말렛
+  [[1,0.5,decay],[1.012,0.4,decay],[2.01,0.26,decay*0.8],[2.78,0.16,decay*0.6],[5.42,0.08,decay*0.4]].forEach(([r,a,d])=>{ // 1·1.012 쌍 → 느린 워블(비팅)
+    const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f*r;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(a*0.3,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g);g.connect(out);o.start(t);o.stop(t+d+0.1);});
+}
+function handpanVoice(ac,G,t,midi,decay,pan){ // 핸드팬(행드럼) — 따뜻한 금속, 옥타브·12도 배음, 깨끗한 어택
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2800;lp.Q.value=0.6; // 따뜻하게(유리알 방지)
+  const out=ac.createGain();out.gain.value=1;lp.connect(out);if(pn){out.connect(pn);pn.connect(G);}else out.connect(G);
+  const f=f2m(midi),dec=Math.min(decay*0.55,3.0);
+  [[1,0.5,dec],[2.0,0.34,dec*0.85],[3.01,0.15,dec*0.6],[4.02,0.06,dec*0.4]].forEach(([r,a,d])=>{ // 기음 + 강한 옥타브 + 12도
+    const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f*r;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(a*0.42,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g);g.connect(lp);o.start(t);o.stop(t+d+0.1);});
+}
+function tingshaVoice(ac,G,t,midi,pan){ // 띵샤(티베탄 심벌) — 맑고 높은 순음 + 긴 여운 + 미세 비팅
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const out=ac.createGain();out.gain.value=1;if(pn){out.connect(pn);pn.connect(G);}else out.connect(G);
+  const f=f2m(midi),dec=5.5+Math.random()*2; // 긴 여운
+  [[1,0.5,dec],[1.006,0.46,dec],[2.74,0.12,dec*0.7],[5.41,0.05,dec*0.45]].forEach(([r,a,d])=>{ // 1·1.006 → 반짝이는 비팅
+    const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f*r;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(a*0.22,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g);g.connect(out);o.start(t);o.stop(t+d+0.1);});
+}
+function gongVoice(ac,G,t,midi,pan,noise,lvl){ // 대형 공/징 — 깊은 저음 + 천천히 피어나는 비조화 배음 + 금속 워시
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1500;lp.Q.value=0.4; // 어둡고 깊게
+  const out=ac.createGain();out.gain.value=lvl||1;lp.connect(out);if(pn){out.connect(pn);pn.connect(G);}else out.connect(G);
+  const f=f2m(midi),dec=10+Math.random()*4; // 긴 여운
+  [[1,0.8],[1.48,0.48],[2.0,0.36],[2.67,0.24],[3.41,0.16],[4.52,0.1]].forEach(([r,a],i)=>{ // 비조화 배음, 높을수록 늦게 블룸
+    const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f*r;o.detune.value=(Math.random()*2-1)*6;
+    const atk=0.1+i*0.13;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(a*0.85,t+atk);g.gain.exponentialRampToValueAtTime(0.0001,t+dec*(1-i*0.08));
+    o.connect(g);g.connect(lp);o.start(t);o.stop(t+dec+0.2);});
+  if(noise){const n=ac.createBufferSource();n.buffer=noise;n.loop=true;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f*3;bp.Q.value=0.6;const ng=ac.createGain();
+    ng.gain.setValueAtTime(0.0001,t);ng.gain.exponentialRampToValueAtTime(0.1,t+0.9);ng.gain.exponentialRampToValueAtTime(0.0001,t+dec*0.7);
+    n.connect(bp);bp.connect(ng);ng.connect(out);n.start(t);n.stop(t+dec);} // 금속 워시(부풀었다 사라짐)
+}
+function choirVoice(ac,G,t,dur,midi,pan,noise){ // 합창 — 모음 포먼트(아/오) + 앙상블 + 인간적 피치 흔들림 + 숨소리
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const out=ac.createGain();const atk=Math.min(2.2,dur*0.4),rel=Math.min(4,dur*0.6);
+  out.gain.setValueAtTime(0.0001,t);out.gain.exponentialRampToValueAtTime(0.2,t+atk);out.gain.setValueAtTime(0.2,t+dur*0.7);out.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
+  if(pn){out.connect(pn);pn.connect(G);}else out.connect(G);
+  [-9,2,10].forEach(dt=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=f2m(midi);o.detune.value=dt;
+    const vf=ac.createOscillator(),vd=ac.createGain();vf.type='sine';vf.frequency.value=4.4+Math.random()*0.9;vd.gain.setValueAtTime(0.0001,t);vd.gain.linearRampToValueAtTime(7,t+1.8);vf.connect(vd);vd.connect(o.detune);vf.start(t);vf.stop(t+dur+rel+0.1); // 비브라토(서서히)
+    const drift=ac.createOscillator(),dg=ac.createGain();drift.type='sine';drift.frequency.value=0.12+Math.random()*0.12;dg.gain.value=5;drift.connect(dg);dg.connect(o.detune);drift.start(t);drift.stop(t+dur+rel+0.1); // 느린 무작위 피치 드리프트(사람 느낌)
+    [[520,6,1.0],[920,7,0.62],[2600,6,0.2],[3400,5,0.07]].forEach(([ff,q,fa])=>{const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=ff;bp.Q.value=q;const fg=ac.createGain();fg.gain.value=fa*0.55;o.connect(bp);bp.connect(fg);fg.connect(out);}); // 모음 포먼트(따뜻한 아/오)
+    const body=ac.createBiquadFilter();body.type='lowpass';body.frequency.value=820;const bg=ac.createGain();bg.gain.value=0.16;o.connect(body);body.connect(bg);bg.connect(out); // 약간의 바디
+    o.start(t);o.stop(t+dur+rel+0.1);});
+  if(noise){const n=ac.createBufferSource();n.buffer=noise;n.loop=true;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=2000;bp.Q.value=0.7;const ng=ac.createGain(); // 숨소리(에어)
+    ng.gain.setValueAtTime(0.0001,t);ng.gain.linearRampToValueAtTime(0.018,t+atk);ng.gain.setValueAtTime(0.018,t+dur*0.7);ng.gain.linearRampToValueAtTime(0.0001,t+dur+rel);n.connect(bp);bp.connect(ng);ng.connect(out);n.start(t);n.stop(t+dur+rel);}
+}
+function airLayer(ac,G,t,dur,noise){ // 대기음(바람/공기) — 느린 스웰
+  const src=ac.createBufferSource();src.buffer=noise;src.loop=true;
+  const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=600+state.bright*8;bp.Q.value=0.5;
+  const lfo=ac.createOscillator(),ld=ac.createGain();lfo.frequency.value=0.03;ld.gain.value=400;lfo.connect(ld);ld.connect(bp.frequency);lfo.start(t);lfo.stop(t+dur+1);
+  const amp=ac.createGain();amp.gain.value=0.0001;
+  // 느린 스웰 반복
+  const swell=0.05;let tt=t;while(tt<t+dur){amp.gain.setValueAtTime(0.004,tt);amp.gain.linearRampToValueAtTime(swell,tt+6);amp.gain.linearRampToValueAtTime(0.004,tt+12);tt+=12;}
+  amp.gain.setValueAtTime(0.0001,t+dur);
+  src.connect(bp);bp.connect(amp);amp.connect(G);src.start(t);src.stop(t+dur+0.2);
+}
+function melodyVoice(ac,G,t,dur,midi,pan){ // 에테리얼 리드 — 부드러운 트라이앵글+옥타브 아래 사인 + 비브라토
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=0.7;const base=Math.min(cutoff()*1.15,f2m(midi)*4.5);
+  lp.frequency.setValueAtTime(base*0.65,t);lp.frequency.linearRampToValueAtTime(base,t+Math.min(1.3,dur*0.4));
+  const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
+  const amp=ac.createGain();const atk=Math.min(1.0,dur*0.3),rel=Math.min(2.6,dur*0.6);
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.12,t+atk);amp.gain.setValueAtTime(0.12,t+dur*0.72);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
+  lp.connect(amp);if(pn){amp.connect(pn);pn.connect(G);}else amp.connect(G);
+  [['triangle',0,1.0],['sine',-12,0.5]].forEach(([w,iv,lv])=>{const o=ac.createOscillator(),og=ac.createGain();o.type=w;o.frequency.value=f2m(midi+iv);og.gain.value=lv;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+rel+0.1);
+    const lfo=ac.createOscillator(),ld=ac.createGain();lfo.type='sine';lfo.frequency.value=5;ld.gain.setValueAtTime(0.0001,t);ld.gain.linearRampToValueAtTime(8,t+Math.min(1.2,dur*0.5));lfo.connect(ld);ld.connect(o.detune);lfo.start(t);lfo.stop(t+dur+rel+0.1);});
+}
+function binauralLayer(ac,master,t,dur,tonic){ // 바이노럴 비트(뇌파 유도) — 좌/우 미세 차 (헤드폰)
+  if(state.binaural==='off')return;
+  const beat={delta:2.5,theta:6,alpha:10}[state.binaural]||6, carrier=f2m(tonic+24);
+  [[-1,-beat/2],[1,beat/2]].forEach(([pan,off])=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=carrier+off;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.05,t+5);g.gain.setValueAtTime(0.05,t+dur-5);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    const pn=ac.createStereoPanner?ac.createStereoPanner():null;o.connect(g);if(pn){pn.pan.value=pan;g.connect(pn);pn.connect(master);}else g.connect(master);o.start(t);o.stop(t+dur+0.2);});
+}
+function solfeggioTone(ac,master,t,dur,hz){ // 솔페지오 치유 톤 — 순음 + 옥타브 배음, 아주 느린 트레몰로
+  const g=ac.createGain();g.connect(master);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.055,t+5);g.gain.setValueAtTime(0.055,t+dur-5);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  const lfo=ac.createOscillator(),ld=ac.createGain();lfo.frequency.value=0.12;ld.gain.value=0.018;lfo.connect(ld);ld.connect(g.gain);lfo.start(t);lfo.stop(t+dur);
+  [[1,1.0],[2,0.16]].forEach(([m,a])=>{const o=ac.createOscillator(),og=ac.createGain();o.type='sine';o.frequency.value=hz*m;og.gain.value=a;o.connect(og);og.connect(g);o.start(t);o.stop(t+dur+0.2);});
+}
+
+// 레이어 on/off를 버스 게인으로 — 재생 중 실시간 토글 가능
+function applyLayerGains(graph,ramp){const L=state.layers,now=ctx?ctx.currentTime:0;
+  const set=(bus,on)=>{const g=graph.buses[bus].gain;if(ramp){g.cancelScheduledValues(now);g.setTargetAtTime(on?1:0,now,0.2);}else g.value=on?1:0;};
+  set('drone',!!L.drone);set('pad',!!L.pad);set('shimmer',!!L.shimmer);set('strings',!!L.strings);set('gong',!!L.gong);set('choir',!!L.choir);
+  set('bell',!!L.bell);set('handpan',!!L.handpan);set('tingsha',!!L.tingsha);set('melody',!!L.melody);set('sub',!!L.sub);set('air',!!L.air);}
+
+function scheduleAll(ac,graph,piece,t0){
+  const G=graph.buses;
+  // 모든 악기 레이어를 항상 스케줄(켜고 끄기는 버스 게인으로) → 재생 중 즉시 반영
+  droneVoice(ac,G.drone,t0,piece.lengthSec,piece.tonic);
+  subVoice(ac,G.sub,t0,piece.lengthSec,piece.tonic);
+  airLayer(ac,G.air,t0,piece.lengthSec,graph.noise);
+  piece.chords.forEach((c,ci)=>{const t=t0+c.t,dur=c.dur+(ci<piece.chords.length-1?1.2:3); // 다음 화음과 겹쳐 끊김 방지
+    c.midis.forEach((m,i)=>{const pan=(i/(c.midis.length-1)-0.5)*0.7;
+      padVoice(ac,G.pad,t,dur,m,pan);
+      if(i%2===0)shimmerVoice(ac,G.shimmer,t,dur,m,-pan);});});
+  piece.chords.forEach((c,ci)=>{const t=t0+c.t,dur=c.dur+(ci<piece.chords.length-1?1.5:3.5); // 로우 현악(첼로)
+    [c.midis[0],c.midis[0]+7].forEach((m,i)=>{let lm=m;while(lm>54)lm-=12;while(lm<38)lm+=12;celloVoice(ac,G.strings,t,dur,lm,i?0.32:-0.32);});});
+  piece.chords.forEach((c,ci)=>{const t=t0+c.t,dur=c.dur+(ci<piece.chords.length-1?1.6:3.5); // 합창(모음 패드)
+    [c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>64)lm-=12;while(lm<50)lm+=12;choirVoice(ac,G.choir,t,dur,lm,i?0.28:-0.28,graph.noise);});});
+  // 대형 공 — 들쭉날쭉 패턴(가끔 쿵쿵 연타), 깊은 저음
+  {const tc=[piece.tonic-12,piece.tonic-12,piece.tonic-19,piece.tonic-17];let gt=4;
+   while(gt<piece.lengthSec-4){const hits=Math.random()<0.42?(Math.random()<0.28?3:2):1;
+     for(let k=0;k<hits&&gt<piece.lengthSec-2;k++){let m=tc[(Math.random()*tc.length)|0];while(m<28)m+=12;while(m>46)m-=12;
+       gongVoice(ac,G.gong,t0+gt,m,(Math.random()*2-1)*0.35,graph.noise,k?0.62:1);
+       gt+=k<hits-1?0.65+Math.random()*1.3:0;}
+     gt+=9+Math.random()*22;}}
+  const bo=state.bellOct||0;
+  piece.bells.forEach((b,i)=>{const pan=((i*0.37)%1-0.5)*0.9;
+    bellVoice(ac,G.bell,t0+b.t,b.midi+bo,b.decay,pan,graph.noise);
+    handpanVoice(ac,G.handpan,t0+b.t,b.midi+bo,b.decay,-pan);});
+  // 띵샤 — 아주 드물게, 높은 음역(토닉 2옥타브 위·5도) + 음역 오프셋, 긴 여운
+  const to=state.tingOct||0;let tt=12;while(tt<piece.lengthSec-3){let m=piece.tonic+(Math.random()<0.5?24:31);while(m>100)m-=12;while(m<82)m+=12;
+    tingshaVoice(ac,G.tingsha,t0+tt,m+to,(Math.random()*2-1)*0.4);tt+=40+Math.random()*24;}
+  if(piece.melody)piece.melody.forEach((n,i)=>melodyVoice(ac,G.melody,t0+n.t,n.dur,n.midi,((i*0.41)%1-0.5)*0.5));
+  applyLayerGains(graph,false); // 초기 on/off 반영
+  // 바이노럴 / 솔페지오(선택 변경 시에는 재생성)
+  binauralLayer(ac,graph.master,t0,piece.lengthSec,piece.tonic);
+  if(state.solfeggio!=='off')solfeggioTone(ac,graph.master,t0,piece.lengthSec,+state.solfeggio);
+}
+
+/* ---------- 라이브 재생 ---------- */
+let ctx,graph,analyser,playing=false,curPiece=null,stopTimer=null,raf2=null,startAt=0,sleepDeadline=null;
+function audioCtx(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();}return ctx;}
+let breathAnchor=0;
+function play(isLoop){
+  let oldGraph=null;
+  if(isLoop&&playing&&graph){
+    /* 루프 전환 — 이전 그래프를 끊지 않고 3초 크로스페이드로 물러나게 한다 */
+    oldGraph=graph;
+    if(stopTimer){clearTimeout(stopTimer);stopTimer=null;}
+  } else {
+    stopAudio(true);
+  }
+  const ac=audioCtx();if(ac.state==='suspended')ac.resume();
+  if(!isLoop)sleepDeadline=state.sleepMin>0?Date.now()+state.sleepMin*60000:null;
+  curPiece=generate();
+  graph=buildGraph(ac);
+  analyser=ac.createAnalyser();analyser.fftSize=256;graph.master.connect(analyser);
+  const t0=ac.currentTime+0.15;startAt=t0;
+  breathAnchor=(typeof performance!=='undefined'?performance.now():Date.now())/1000+0.15;
+  scheduleAll(ac,graph,curPiece,t0);
+  graph.master.gain.cancelScheduledValues(t0);graph.master.gain.setValueAtTime(0.0001,t0);
+  graph.master.gain.exponentialRampToValueAtTime(0.6,t0+(oldGraph?3.0:1.8)); // 루프 전환은 더 긴 크로스페이드
+  if(oldGraph){
+    try{oldGraph.master.gain.cancelScheduledValues(t0);
+      oldGraph.master.gain.setValueAtTime(oldGraph.master.gain.value,t0);
+      oldGraph.master.gain.linearRampToValueAtTime(0.0001,t0+3.0);}catch(e){}
+    setTimeout(()=>{try{oldGraph.master.disconnect();}catch(e){}},3800);
+  }
+  playing=true;$('play').textContent='정지';$('orbLabel').textContent='재생 중';$('glow').style.opacity='1';
+  let endSec=curPiece.lengthSec,sleepStop=false;
+  if(sleepDeadline){const rem=(sleepDeadline-Date.now())/1000;
+    if(rem<=curPiece.lengthSec+0.5){endSec=Math.max(2,rem);sleepStop=true;
+      const fadeStart=Math.max(0.1,rem-15);
+      try{graph.master.gain.setValueAtTime(0.6,t0+fadeStart);graph.master.gain.exponentialRampToValueAtTime(0.0001,t0+rem);}catch(e){}}}
+  const loopLead=state.loop&&!sleepStop?Math.max(1,endSec-2.5):endSec+2.2;
+  stopTimer=setTimeout(()=>{ if(sleepStop){stopAudio();} else if(state.loop&&playing){play(true);} else stopAudio(); }, loopLead*1000);
+  meterLoop();
+}
+/* ---------- 숨 웨이브 세션 모드 — 레벨 아크 자동 주행 ---------- */
+/* 재배분 기준 비율: P1 10% / P2 18% / P3 12% / P4 28%(절정 58% 지점) / P5 22% / P6 10% */
+const dB=v=>Math.pow(10,v/20);
+function planSessionArc(lenMin){
+  const T=lenMin*60;
+  return [
+    {t:0,        db:-8, fade:20, phase:'P1 그라운딩'},
+    {t:T*0.10,   db:-12,fade:10, phase:'P2 소리 배움'},
+    {t:T*0.28,   db:-8, fade:10, phase:'P3 소품 만남'},
+    {t:T*0.40,   db:-5, fade:20, phase:'P4 합주 명상'},
+    {t:T*0.58,   db:-8, fade:30, phase:'P4 절정 — 드론 후퇴'},
+    {t:T*0.68,   db:0,  fade:40, phase:'P5 사운드배스'},
+    {t:T*0.90,   db:-90,fade:8,  phase:'P6 통합·나눔 (무드론)'}
+  ];
+}
+let session=null,sessionTick=null,wakeLock=null;
+function fmtMMSS(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+/* 단계 전환 띵샤 큐 — 3타(2.2초 간격). 세션 게인을 우회해 P6 무드론에서도 들린다 */
+function scheduleTingshaCue(ac,cueG,at){
+  let m=(curPiece?curPiece.tonic:48)+36;
+  while(m>96)m-=12;while(m<84)m+=12;
+  [0,2.2,4.4].forEach((d,i)=>tingshaVoice(ac,cueG,at+d,m,i===0?-0.25:(i===1?0:0.25)));
+}
+function startSession(){
+  if(!state.sumwave||state.sumwave==='tea'){toast('세션 모드는 드론 프리셋(A1~A3)에서 시작할 수 있어요');return;}
+  stopAudio(true);
+  const lenMin=+($('swLen').value||50);
+  const ac=audioCtx();if(ac.state==='suspended')ac.resume();
+  const prevLen=state.len;
+  /* 입장 대기 여유분 +25분을 포함해 생성 */
+  state.len=lenMin+25;
+  curPiece=generate();
+  state.len=prevLen;
+  graph=buildGraph(ac);
+  analyser=ac.createAnalyser();analyser.fftSize=256;graph.master.connect(analyser);
+  /* 큐 전용 게인 — sessionG 뒤(tone)로 직결해 뮤트 구간에도 울린다 */
+  const cueG=ac.createGain();cueG.gain.value=0.5;cueG.connect(graph.tone);
+  const t0=ac.currentTime+0.15;startAt=t0;
+  breathAnchor=(typeof performance!=='undefined'?performance.now():Date.now())/1000+0.15;
+  scheduleAll(ac,graph,curPiece,t0);
+  graph.master.gain.cancelScheduledValues(t0);
+  graph.master.gain.setValueAtTime(0.0001,t0);
+  graph.master.gain.exponentialRampToValueAtTime(0.6,t0+1.8);
+  /* 입장 대기: -8dB 고정으로 깔림 */
+  const g=graph.sessionG.gain;
+  g.cancelScheduledValues(t0);
+  g.setValueAtTime(0.02,t0);
+  g.linearRampToValueAtTime(dB(-8),t0+20);
+  session={mode:'standby',lenMin,cueG,end:null};
+  playing=true;$('play').textContent='정지';$('orbLabel').textContent='입장 대기';$('glow').style.opacity='1';
+  $('swSession').textContent='세션 시작';
+  $('swStatus').textContent='입장 대기 — 참가자가 앉으면 [세션 시작]을 탭하세요';
+  if(navigator.wakeLock){navigator.wakeLock.request('screen').then(w=>{wakeLock=w;}).catch(()=>{});}
+  meterLoop();
+  toast('입장 배경이 깔렸습니다 (-8dB)');
+}
+function armSession(){
+  if(!session||session.mode!=='standby'){return;}
+  const ac=audioCtx();
+  const lenMin=session.lenMin;
+  const ts=ac.currentTime+0.05;
+  const arc=planSessionArc(lenMin);
+  const g=graph.sessionG.gain;
+  g.cancelScheduledValues(ts);
+  g.setValueAtTime(dB(-8),ts);
+  let prev=dB(-8);
+  arc.forEach(p=>{
+    const v=dB(p.db);
+    g.setValueAtTime(prev,ts+p.t);
+    g.linearRampToValueAtTime(v,ts+p.t+p.fade);
+    prev=v;
+  });
+  /* 단계 전환 띵샤 3타 — P2·P3·P4·P5·P6 시작 시점 (P4 절정은 레벨 이벤트라 제외) */
+  const cueTimes=arc.filter(p=>p.phase.startsWith('P2')||p.phase.startsWith('P3')||(p.phase.startsWith('P4')&&!p.phase.includes('절정'))||p.phase.startsWith('P5')||p.phase.startsWith('P6')).map(p=>p.t);
+  cueTimes.forEach(t=>scheduleTingshaCue(ac,session.cueG,ts+t));
+  session.mode='running';session.arc=arc;session.end=lenMin*60;session.cueTimes=cueTimes;
+  startAt=ts;
+  $('orbLabel').textContent='세션 모드';
+  $('swSession').textContent='세션 종료';
+  stopTimer=setTimeout(()=>{stopAudio();},(session.end+2)*1000);
+  sessionTick=setInterval(()=>{
+    if(!session||session.mode!=='running'){return;}
+    const el=audioCtx().currentTime-startAt;
+    const rem=session.end-el;
+    let ph=session.arc[0].phase;
+    session.arc.forEach(p=>{if(el>=p.t)ph=p.phase;});
+    $('swStatus').textContent=ph+'  ·  '+fmtMMSS(el)+' / '+fmtMMSS(session.end)+'  (남은 '+fmtMMSS(rem)+')';
+    if(rem<=0){$('swStatus').textContent='세션 완료 — 잔향이 끝나는 곳에서 오늘이 시작됩니다';}
+  },1000);
+  toast(lenMin+'분 세션 시작 — 단계 전환마다 띵샤 3타가 울립니다');
+}
+function endSessionState(){
+  if(sessionTick){clearInterval(sessionTick);sessionTick=null;}
+  if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
+  if(session){session=null;const b=$('swSession');if(b)b.textContent='세션 모드 시작';}
+  const st=$('swStatus');if(st&&!st.textContent.includes('완료'))st.textContent='';
+}
+function stopAudio(silent){
+  endSessionState();
+  if(stopTimer){clearTimeout(stopTimer);stopTimer=null;}
+  playing=false;if(!silent)sleepDeadline=null;
+  if(ctx){try{graph&&graph.master.gain.cancelScheduledValues(ctx.currentTime);}catch(e){}
+    if(graph){try{graph.master.gain.setTargetAtTime(0.0001,ctx.currentTime,0.3);}catch(e){}}
+    const old=graph;setTimeout(()=>{try{old&&old.master.disconnect();}catch(e){}},600);}
+  if(!silent){$('play').textContent='재생';$('orbLabel').textContent='눌러서 시작';$('orbSub').textContent='—';$('breathCue').textContent='';$('glow').style.opacity='.7';
+    setOrb(0);}
+}
+function meterLoop(){if(!playing){return;}
+  const buf=new Uint8Array(analyser.frequencyBinCount);analyser.getByteFrequencyData(buf);
+  let s=0;for(let i=0;i<buf.length;i++)s+=buf[i];const lvl=s/buf.length/255;
+  setOrb(lvl);
+  if(state.autoEvolve&&graph){ // 공간감·밝기를 아주 느리게 자동으로 흔들기(EQ가 숨쉬듯)
+    const t=ctx.currentTime;
+    const es=Math.max(0,Math.min(100,state.space+Math.sin(t*2*Math.PI/25)*16));
+    const eb=Math.max(0,Math.min(100,state.bright+Math.sin(t*2*Math.PI/33+1.7)*15));
+    graph.reverbWet.gain.setTargetAtTime(0.5+es/100*0.6,t,0.5);
+    graph.tone.frequency.setTargetAtTime(2000+Math.pow(eb/100,1.3)*16000,t,0.5);
+    $('space').value=es;$('spaceV').textContent=Math.round(es);$('bright').value=eb;$('brightV').textContent=Math.round(eb); // 슬라이더가 따라 움직임
+  }
+  const el=ctx.currentTime-startAt,tot=curPiece.lengthSec;
+  let label=fmt(Math.max(0,el))+' / '+fmt(tot);
+  if(sleepDeadline){const rem=Math.max(0,(sleepDeadline-Date.now())/1000);label+='  ·  💤 '+fmt(rem);}
+  $('orbSub').textContent=label;
+  raf2=requestAnimationFrame(meterLoop);
+}
+/* 호흡 가이드 패턴(라벨, 초) */
+const BREATH={coherent:[['들숨',5.5],['날숨',5.5]],six:[['들숨',6],['날숨',6]],box:[['들숨',4],['멈춤',4],['날숨',4],['멈춤',4]],b478:[['들숨',4],['멈춤',7],['날숨',8]],
+  ext46:[['들숨',4],['날숨',6]],ext48:[['들숨',4],['날숨',8]],sigh:[['들숨',4],['들숨+',1],['날숨',8]]};
+function breathState(now){const pat=BREATH[state.breath];if(!pat)return null;
+  const cyc=pat.reduce((a,p)=>a+p[1],0);let x=((now-breathAnchor)%cyc+cyc)%cyc;
+  for(let i=0;i<pat.length;i++){const[lab,d]=pat[i];if(x<d)return{lab,frac:x/d,remain:d-x,i,pat};x-=d;}
+  return{lab:pat[0][0],frac:0,remain:pat[0][1],i:0,pat};}
+const PULSE=7.2; // 느린 호흡/심장 주기(초)
+const ease=b=>b*b*(3-2*b); // 부드러운 가감속
+function setOrb(lvl){
+  const now=((typeof performance!=='undefined'&&performance.now)?performance.now():Date.now())/1000;
+  const lo=0.90,hi=1.10;let sc,gx;const bs=breathState(now);
+  if(bs){ let p;
+    if(bs.lab==='들숨')p=ease(bs.frac);
+    else if(bs.lab==='날숨')p=1-ease(bs.frac);
+    else{const prev=bs.pat[(bs.i-1+bs.pat.length)%bs.pat.length][0];p=(prev==='들숨')?1:0;}
+    sc=lo+(hi-lo)*p;gx=p*0.16;
+    $('breathCue').textContent=bs.lab+' · '+Math.ceil(bs.remain);
+  } else { // 느리고 고급스러운 심장 박동(가감속)
+    const b=ease(0.5-0.5*Math.cos(now*2*Math.PI/PULSE));
+    sc=0.94+b*0.12;gx=b*0.10;
+    if(state.breath==='off')$('breathCue').textContent='';
+  }
+  sc+=lvl*0.06;
+  const core=$('core'),glow=$('glow');
+  if(core)core.style.transform=`scale(${sc.toFixed(3)})`;
+  if(glow)glow.style.transform=`scale(${(0.9+gx+lvl*0.2).toFixed(3)})`;
+}
+const fmt=s=>{s=Math.round(s);return (Math.floor(s/60))+':'+String(s%60).padStart(2,'0');};
+
+/* ---------- WAV 내보내기 (오프라인 렌더) ---------- */
+/* 심리스 루프 크로스페이드 — 끝 X초를 머리 X초에 등파워 합성 후 절단 */
+function crossfadeLoop(buf,xfadeSec){
+  const sr=buf.sampleRate;
+  const xf=Math.min(Math.floor(xfadeSec*sr),Math.floor(buf.length/3));
+  const outLen=buf.length-xf;
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const oc=new OAC(buf.numberOfChannels,outLen,sr);
+  const out=oc.createBuffer(buf.numberOfChannels,outLen,sr);
+  for(let c=0;c<buf.numberOfChannels;c++){
+    const s=buf.getChannelData(c),d=out.getChannelData(c);
+    for(let i=0;i<outLen;i++)d[i]=s[i];
+    for(let i=0;i<xf;i++){
+      const w=Math.sin((i/xf)*Math.PI/2);
+      const wt=Math.cos((i/xf)*Math.PI/2);
+      d[i]=s[i]*w+s[outLen+i]*wt;
+    }
+  }
+  return out;
+}
+function swFileName(kind){
+  const moon=state.moon&&state.sumwave!=='tea'?'_moon':'';
+  if(state.sumwave)return `sumwave-drone_${state.sumwave}${moon}_${state.len}min${kind==='wav'?'_loop.wav':'.mid'}`;
+  return `sumwave_${state.mood}_${state.len}min.${kind==='wav'?'wav':'mid'}`;
+}
+function exportWAV(){
+  const isSW=!!state.sumwave;
+  const XF=8;
+  const piece=generate();
+  if(isSW){piece.lengthSec+=XF;
+    if(piece.chords.length===1)piece.chords[0].dur=piece.lengthSec;}
+  const sr=isSW?48000:44100;
+  const len=Math.ceil((piece.lengthSec+(isSW?0.2:3))*sr);
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  if(!OAC){toast('이 브라우저는 WAV 렌더를 지원하지 않아요');return;}
+  const oac=new OAC(2,len,sr);
+  const g=buildGraph(oac);scheduleAll(oac,g,piece,0.0);
+  if(isSW){
+    /* 루프용 — 시작·끝 페이드 없이 일정 레벨 (이음은 크로스페이드가 처리) */
+    g.master.gain.setValueAtTime(0.6,0);
+  } else {
+    g.master.gain.setValueAtTime(0.0001,0);g.master.gain.exponentialRampToValueAtTime(0.6,1.8); // 페이드인
+    // 끝부분 페이드아웃
+    g.master.gain.setValueAtTime(0.6,piece.lengthSec-0.01<0?0:piece.lengthSec);g.master.gain.exponentialRampToValueAtTime(0.0001,piece.lengthSec+2.5);
+  }
+  toast(isSW?'루프 렌더링 중…':'렌더링 중…');
+  $('wav').disabled=true;
+  /* 진행률 체크포인트 — 10% 단위 suspend/resume */
+  if(typeof oac.suspend==='function'){
+    const total=len/sr;
+    for(let i=1;i<10;i++){
+      const at=total*i/10;
+      try{oac.suspend(at).then(()=>{toast((isSW?'루프 렌더링 ':'렌더링 ')+(i*10)+'%');oac.resume();});}catch(e){}
+    }
+  }
+  oac.startRendering().then(buf=>{
+    const final=isSW?crossfadeLoop(buf,XF):buf;
+    const name=swFileName('wav');
+    const blob=isSW?audioBufferToWav24(final):audioBufferToWav(final);dlBlob(blob,name);$('wav').disabled=false;toast(isSW?'루프 WAV 저장됨 (48kHz/24bit 심리스)':'WAV 저장됨');})
+    .catch(e=>{$('wav').disabled=false;toast('렌더 실패: '+e.message);});
+}
+function audioBufferToWav(buf){const nc=buf.numberOfChannels,len=buf.length,sr=buf.sampleRate,ba=nc*2,dl=len*ba;
+  const ab=new ArrayBuffer(44+dl),v=new DataView(ab);let p=0;
+  const ws=s=>{for(let i=0;i<s.length;i++)v.setUint8(p++,s.charCodeAt(i));};
+  const u32=x=>{v.setUint32(p,x,true);p+=4;},u16=x=>{v.setUint16(p,x,true);p+=2;};
+  ws('RIFF');u32(36+dl);ws('WAVE');ws('fmt ');u32(16);u16(1);u16(nc);u32(sr);u32(sr*ba);u16(ba);u16(16);ws('data');u32(dl);
+  const ch=[];for(let c=0;c<nc;c++)ch.push(buf.getChannelData(c));
+  for(let i=0;i<len;i++)for(let c=0;c<nc;c++){
+    let s=Math.max(-1,Math.min(1,ch[c][i]));
+    const dith=(Math.random()+Math.random()-1)/32768;
+    s=Math.max(-1,Math.min(1,s+dith));
+    v.setInt16(p,s<0?s*0x8000:s*0x7FFF,true);p+=2;}
+  return new Blob([ab],{type:'audio/wav'});
+}
+/* 24bit PCM WAV — 세션 드론 사양(48kHz/24bit) */
+function audioBufferToWav24(buf){
+  const nc=buf.numberOfChannels,len=buf.length,sr=buf.sampleRate,ba=nc*3,dl=len*ba;
+  const ab=new ArrayBuffer(44+dl),v=new DataView(ab);
+  let p=0;
+  const ws=s=>{for(let i=0;i<s.length;i++)v.setUint8(p++,s.charCodeAt(i));};
+  const u32=x=>{v.setUint32(p,x,true);p+=4;};
+  const u16=x=>{v.setUint16(p,x,true);p+=2;};
+  ws('RIFF');u32(36+dl);ws('WAVE');ws('fmt ');u32(16);u16(1);u16(nc);u32(sr);u32(sr*ba);u16(ba);u16(24);ws('data');u32(dl);
+  const ch=[];
+  for(let c=0;c<nc;c++)ch.push(buf.getChannelData(c));
+  for(let i=0;i<len;i++)for(let c=0;c<nc;c++){
+    let s=Math.max(-1,Math.min(1,ch[c][i]));
+    const q=Math.round(s<0?s*0x800000:s*0x7FFFFF);
+    v.setUint8(p++,q&255);v.setUint8(p++,(q>>8)&255);v.setUint8(p++,(q>>16)&255);
+  }
+  return new Blob([ab],{type:'audio/wav'});
+}
+function dlBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+
+/* ---------- MIDI 내보내기 (패드+벨+드론, 60BPM=1초/박) ---------- */
+function sbm(s){return [...s].map(c=>c.charCodeAt(0));}
+function u32(n){return[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255];}
+function u16(n){return[(n>>>8)&255,n&255];}
+function vlq(n){let b=[n&0x7f];n>>=7;while(n){b.unshift((n&0x7f)|0x80);n>>=7;}return b;}
+function metaBytes(type,str){
+  const b=Array.from(new TextEncoder().encode(str));
+  return [0xFF,type,...vlq(b.length),...b];
+}
+/* 리니어 CC 램프 — 값 1단위마다 이벤트를 찍어 계단 없이 직선으로 */
+function ccRamp(t0,t1,v0,v1){
+  const out=[];
+  const steps=Math.abs(v1-v0);
+  if(steps===0){out.push({t:t0,val:v1});return out;}
+  for(let i=0;i<=steps;i++){
+    const v=Math.round(v0+(v1-v0)*(i/steps));
+    out.push({t:t0+(t1-t0)*(i/steps),val:v});
+  }
+  return out;
+}
+function noteTrack(notes,ch,prog,name,desc,ccs){const PPQ=480,ev=[];
+  notes.forEach(n=>{const on=Math.round(n.t*PPQ),off=Math.round((n.t+n.dur)*PPQ);ev.push({tick:on,pr:2,d:[0x90|ch,n.midi,n.vel||70]});ev.push({tick:off,pr:0,d:[0x80|ch,n.midi,0]});});
+  (ccs||[]).forEach(c=>{ev.push({tick:Math.max(0,Math.round(c.t*PPQ)),pr:1,d:[0xB0|ch,11,Math.max(0,Math.min(127,c.val))]});});
+  ev.sort((a,b)=>a.tick-b.tick||a.pr-b.pr);
+  let last=0,body=[];
+  if(name)body.push(...vlq(0),...metaBytes(0x03,name));
+  if(desc)body.push(...vlq(0),...metaBytes(0x01,desc));
+  if(prog!=null)body.push(...vlq(0),0xC0|ch,prog);
+  ev.forEach(e=>{body.push(...vlq(e.tick-last),...e.d);last=e.tick;});body.push(...vlq(0),0xFF,0x2F,0);
+  return [...sbm('MTrk'),...u32(body.length),...body];}
+const COMMON_SETUP=[
+ 'SUM WAVE 공통 세팅 — 프로젝트 템포 60 BPM (4분음표 = 1초, 1마디 = 4초).',
+ '[프로젝트] File > Project Settings > Audio: Sample Rate 48kHz. Recording: Bit Depth 24bit.',
+ '[BUS 1 — 메인 홀] 각 트랙 Sends에서 Bus 1 선택 → Aux 1 자동 생성. Aux 1 Insert 1: ChromaVerb. Room Type: Synth Hall. Attack 0ms. Size 88. Density 92. Distance 45. Decay 6.0s. Predelay 40ms. Mix 100%. Aux 1 볼륨 -6.0dB.',
+ '[BUS 2 — 롱 테일] Aux 2 Insert 1: ChromaVerb. Room Type: Smooth Space. Attack 0ms. Size 100. Density 85. Distance 60. Decay 12.0s. Predelay 80ms. Mix 100%. Aux 2 Insert 2: Channel EQ — Band 1 High Pass ON / Frequency 180Hz / Slope 12dB/Oct (저역 진흙 방지). Aux 2 볼륨 -9.0dB.',
+ '[스테레오 폭] 각 패드 계열 트랙 Insert 마지막: Direction Mixer. Spread 1.3. Direction 0.',
+ '[마스터] Stereo Out Insert 1: Channel EQ — Band 1 High Pass ON / Frequency 28Hz / Slope 24dB/Oct. Insert 2: Compressor — Circuit Type Platinum Digital / Ratio 1.5:1 / Threshold -16dB / Attack 30ms / Release 300ms / Gain Reduction 1~2dB. Insert 3: Limiter — Output -1.0dB / Gain 0dB (안전용, 상시 게인리덕션 금지).',
+ '[라우드니스] 프로그램 재생용 목표 -18 LUFS Integrated (세션 스피커 여유폭 확보), True Peak -3dBTP 이하. 스트리밍 배포용으로 바꿀 때만 -14 LUFS.',
+ '[임포트] File > Import > MIDI File. 트랙명이 자동 생성되며, 각 트랙의 Expression(CC11) 오토메이션이 함께 들어옵니다. 오토메이션이 보이지 않으면 트랙 헤더 A 버튼 > Expression 선택.'
+].join(' ');
+function tempoTrack(){
+  const body=[...vlq(0),...metaBytes(0x03,'SUM WAVE | 공통 세팅 · 60 BPM'),
+              ...vlq(0),...metaBytes(0x01,COMMON_SETUP),
+              ...vlq(0),0xFF,0x51,3,0x0F,0x42,0x40,...vlq(0),0xFF,0x2F,0];
+  return [...sbm('MTrk'),...u32(body.length),...body];}
+/* ---------- Logic Pro 11 트랙별 세팅 (전 항목 수치 명시) ---------- */
+const D=(role,mood,inst,params,mixer,eq,ins,send,note)=>
+  ['[역할] '+role,'[분위기] '+mood,'[음원] '+inst,'[음원 수치] '+params,
+   '[믹서] '+mixer,'[Channel EQ] '+eq,'[인서트] '+ins,'[센드] '+send,'[주의] '+note].join(' ');
+const DESC={
+ drone:D(
+  '세션 전체의 저역 바닥. 시작부터 끝까지 끊기지 않는 지속음.',
+  '어둡고 따뜻하게 깔린다. 앞으로 나오지 않고 방 전체에 스며든다.',
+  'Alchemy. Library > Synthesizer > Alchemy > Pads 에서 다크/에볼빙 계열 프리셋 로드 후, 아래 수치를 반드시 직접 세팅(프리셋은 출발점일 뿐).',
+  'Alchemy 상단 Amp 섹션 > ADSR: Attack 2500ms / Decay 0ms / Sustain 100% / Release 3500ms. Filter 섹션: Type Lowpass 12dB / Cutoff 380Hz / Resonance 12%. Master 섹션: Glide 0ms / Voices 8.',
+  '볼륨 -8.0dB / 팬 0 (센터 고정, 좌우로 벌리지 않는다).',
+  'Band 1 High Pass ON / Frequency 32Hz / Slope 12dB per Oct. Band 5 Peak / Frequency 220Hz / Gain -2.5dB / Q 0.80 (진흙 대역 정리). Band 8 Low Cut(LPF) ON / Frequency 2200Hz / Slope 12dB per Oct. Analyzer Pre 확인용으로만 ON.',
+  'Insert 1 Channel EQ. Insert 2 Direction Mixer — Spread 1.3 / Direction 0. Insert 3 없음(컴프 금지, 드론은 눌리면 죽는다).',
+  'Send 1 > Bus 1 / -12.0dB / Post Pan.',
+  '이 트랙의 CC11 오토메이션이 코드 경계를 127에서 45로 내렸다가 다시 127로 직선 복귀시킨다. 지우면 코드가 툭 바뀐다.'),
+ sub:D(
+  '드론 한 옥타브 아래. 귀보다 몸으로 느끼는 저역.',
+  '보이지 않는 무게감. 소리라기보다 바닥의 두께.',
+  'Retro Synth. Library > Synthesizer > Retro Synth > Basses 계열 로드 후 아래대로 재설정.',
+  'Retro Synth 좌상단 모드 탭: Analog 선택. Osc 1 파형 Sine / Osc 2 Level 0 / Sub Level 0 / Noise 0. Filter: Cutoff 100% (필터 개방, 대역 제한은 EQ가 담당) / Resonance 0%. Amp Envelope: Attack 1200ms / Decay 0ms / Sustain 100% / Release 2500ms. Glide 0ms.',
+  '볼륨 -12.0dB / 팬 0 (저역은 반드시 모노 센터).',
+  'Band 1 High Pass ON / Frequency 24Hz / Slope 12dB per Oct (스피커 보호). Band 8 Low Cut(LPF) ON / Frequency 120Hz / Slope 24dB per Oct.',
+  'Insert 1 Channel EQ. Insert 2 Compressor — Circuit Type Platinum Digital / Ratio 2:1 / Threshold -18.0dB / Attack 30ms / Release 200ms / Knee 0.5 / Make Up Auto OFF / Gain Reduction 2~3dB 유지.',
+  '없음 (Send 0). 저역에 리버브를 보내면 방이 웅웅거린다.',
+  '재생 스피커가 저역을 못 내면 이 트랙만 -6.0dB로 올리지 말고 서브우퍼 유무를 먼저 확인할 것. 좌석별 저역 편차는 -60분 세팅 때 체크.'),
+ pad:D(
+  '화성의 본체. 드론 위에서 구름처럼 움직이는 층.',
+  '부드럽고 넓게. 경계 없이 번지는 안개.',
+  'Alchemy. Library > Synthesizer > Alchemy > Pads 에서 웜/소프트 계열 로드 후 아래대로 재설정.',
+  'Amp ADSR: Attack 1800ms / Decay 0ms / Sustain 100% / Release 3000ms. Filter: Type Lowpass 12dB / Cutoff 4500Hz / Resonance 8%. Master: Voices 16 / Glide 0ms. Transform Pad 사용 시 X/Y 모두 중앙 고정.',
+  '볼륨 -10.0dB / 팬 0.',
+  'Band 1 High Pass ON / Frequency 90Hz / Slope 12dB per Oct (드론과 저역 자리 다툼 방지). Band 6 Peak / Frequency 3200Hz / Gain -2.0dB / Q 1.00 (귀 찌르는 대역). Band 8 Low Cut(LPF) ON / Frequency 8000Hz / Slope 12dB per Oct.',
+  'Insert 1 Channel EQ. Insert 2 Direction Mixer — Spread 1.5 / Direction 0.',
+  'Send 1 > Bus 1 / -8.0dB / Post Pan. Send 2 > Bus 2 / -14.0dB.',
+  'CC11이 코드마다 45까지 내려갔다 올라온다. 이 트랙의 오토메이션을 지우면 화성 전환이 계단처럼 들린다.'),
+ choir:D(
+  '사람 목소리의 온기를 화성에 얹는 층.',
+  '성스럽고 아득하게. 가사 없이 멀리서.',
+  'Alchemy. Library > Synthesizer > Alchemy > Vocals 에서 우/아 계열 패드 로드 후 아래대로 재설정.',
+  'Amp ADSR: Attack 2000ms / Decay 0ms / Sustain 100% / Release 2800ms. Filter: Type Lowpass 12dB / Cutoff 3800Hz / Resonance 6%. Vibrato/LFO Depth 0 (흔들면 사람 흉내가 되어 어색해진다).',
+  '볼륨 -14.0dB / 팬 0.',
+  'Band 1 High Pass ON / Frequency 140Hz / Slope 12dB per Oct. Band 5 Peak / Frequency 1800Hz / Gain -3.0dB / Q 1.20 (모음 뭉침 정리). Band 8 Low Cut(LPF) ON / Frequency 6000Hz / Slope 12dB per Oct.',
+  'Insert 1 Channel EQ. Insert 2 Direction Mixer — Spread 1.7 / Direction 0.',
+  'Send 1 > Bus 1 / -6.0dB. Send 2 > Bus 2 / -10.0dB (합창은 꼬리가 길수록 좋다).',
+  '벨로시티 58로 고정 출력된다. 올리면 사람 소리가 앞으로 튀어나와 명상이 깨진다.'),
+ strings:D(
+  '루트와 5도만 받치는 첼로 음역의 현.',
+  '낮고 진중하게. 활이 아니라 숨처럼.',
+  'Studio Strings. Library > Orchestral > Strings > Studio Strings 로드. Articulation Set에서 Legato 선택(트랙 헤더 좌측 아티큘레이션 슬롯).',
+  'Studio Strings 화면: Ensemble Size Medium / Section Cellos + Basses / Vibrato 25% / Release 자연값 유지. Expression은 MIDI CC11이 직접 제어하므로 플러그인 내 Dynamics 노브는 중앙 고정.',
+  '볼륨 -12.0dB / 팬 -15 (좌측 약간, 오케스트라 배치 관습).',
+  'Band 1 High Pass ON / Frequency 60Hz / Slope 12dB per Oct. Band 4 Peak / Frequency 260Hz / Gain -2.0dB / Q 0.90 (박스 대역). Band 8 Low Cut(LPF) ON / Frequency 5000Hz / Slope 12dB per Oct (활 소음 제거).',
+  'Insert 1 Channel EQ.',
+  'Send 1 > Bus 1 / -10.0dB.',
+  '임포트 후 CC11 오토메이션이 반드시 보여야 한다. 안 보이면 트랙 헤더 A 버튼 > Expression 선택. Studio Strings는 CC11에 직접 반응한다.'),
+ bell:D(
+  '여백에 떨어지는 별 같은 포인트.',
+  '맑고 드물게. 소리가 아니라 점.',
+  'Sampler. Library > Mallets 또는 Sampler 라이브러리에서 벨/뮤직박스/셀레스타 계열 로드.',
+  'Sampler 우측 Amp Envelope: Attack 0ms / Decay 0ms / Sustain 100% / Release 최대값(감쇠는 샘플 자체에 맡긴다). Filter Cutoff 100% 개방. Pitch Bend Range 0.',
+  '볼륨 -16.0dB / 팬 +20.',
+  'Band 1 High Pass ON / Frequency 200Hz / Slope 12dB per Oct. Band 8 Low Cut(LPF) ON / Frequency 12000Hz / Slope 12dB per Oct.',
+  'Insert 1 Channel EQ. Insert 2 Tape Delay — Tempo Sync ON / Note 1/4 (템포 60이므로 1.000초) / Feedback 22% / Low Cut 400Hz / High Cut 6000Hz / Mix 18%.',
+  'Send 2 > Bus 2 / -4.0dB (긴 꼬리 담당). Send 1 > Bus 1 / -12.0dB.',
+  '이 트랙에는 CC11 페이드가 없다(고정 112). 감쇠 악기에 익스프레션을 걸면 타점의 어택이 뭉개진다.'),
+ melody:D(
+  '드문 프레이즈로 지나가는 숨결 멜로디.',
+  '가늘고 공기처럼. 전경이 아니라 풍경.',
+  'Alchemy. Library > Synthesizer > Alchemy > Leads 에서 에어리/브레스 계열 로드 후 아래대로 재설정.',
+  'Amp ADSR: Attack 600ms / Decay 0ms / Sustain 100% / Release 1800ms. Filter: Type Lowpass 12dB / Cutoff 5200Hz / Resonance 5%. Master Voices 4 / Glide 40ms (음 사이를 미끄러지게).',
+  '볼륨 -18.0dB / 팬 +10. (반주보다 확실히 아래. 멜로디가 들리면 이미 큰 것이다.)',
+  'Band 1 High Pass ON / Frequency 250Hz / Slope 12dB per Oct. Band 8 Low Cut(LPF) ON / Frequency 9000Hz / Slope 12dB per Oct.',
+  'Insert 1 Channel EQ.',
+  'Send 1 > Bus 1 / -6.0dB. Send 2 > Bus 2 / -8.0dB.',
+  'CC11 고정 100. 숨 웨이브 세션 드론 프리셋에서는 이 트랙이 아예 생성되지 않는다(3도 유입 차단).'),
+ handpan:D(
+  '금속의 물방울 같은 타점.',
+  '둥글고 명상적으로. 때리지 않고 떨어뜨린 소리.',
+  'Sampler. Library에서 핸드팬/메탈 퍼커션 계열을 우선 검색. 없으면 Kalimba 계열 로드 후 아래 EQ와 리버브로 보정.',
+  'Sampler Amp Envelope: Attack 0ms / Release 최대값. Filter Cutoff 100%. 칼림바 대체 시 Filter Type Lowpass / Cutoff 6000Hz로 금속 날 세움 제거.',
+  '볼륨 -14.0dB / 팬 -20.',
+  'Band 1 High Pass ON / Frequency 120Hz / Slope 12dB per Oct. Band 5 Peak / Frequency 2400Hz / Gain -2.5dB / Q 1.00 (때리는 소리 완화). Band 8 Low Cut(LPF) ON / Frequency 10000Hz / Slope 12dB per Oct.',
+  'Insert 1 Channel EQ. Insert 2 Direction Mixer — Spread 1.2 / Direction 0.',
+  'Send 1 > Bus 1 / -6.0dB. Send 2 > Bus 2 / -10.0dB.',
+  'CC11 고정 110, 페이드 없음. 세션에서 실제 핸드팬을 쓴다면 이 트랙은 뮤트하고 드론만 재생할 것 — 실물과 겹치면 참가자가 자기 소리를 못 듣는다.'),
+ tingsha:D(
+  '구간을 여닫는 높은 종. 한 번의 타점이 문 하나.',
+  '투명하게, 아주 드물게. 50초에 한 번.',
+  'Sampler. Library > Mallets > Glockenspiel 또는 핑거 심벌/차임 계열 로드.',
+  'Sampler Amp Envelope: Attack 0ms / Release 최대값. Filter Cutoff 100% 개방. Tuning Fine 0 (띵샤의 맥놀이는 실물의 몫).',
+  '볼륨 -18.0dB / 팬 +30.',
+  'Band 1 High Pass ON / Frequency 400Hz / Slope 12dB per Oct. Band 8 Low Cut(LPF) ON / Frequency 16000Hz / Slope 6dB per Oct (초고역은 살린다).',
+  'Insert 1 Channel EQ.',
+  'Send 2 > Bus 2 / -3.0dB (가장 긴 꼬리). Send 1 > Bus 1 / -10.0dB.',
+  'CC11 고정 105. 밀도를 올리지 말 것 — 앱에서 50초 간격으로 고정 생성된다.'),
+ gong:D(
+  '시간의 마디를 알리는 큰 원.',
+  '깊고 오래. 잔향이 사라질 때까지가 한 번의 연주.',
+  'Sampler. Library > Percussion 에서 Gong/Tam-tam 계열 로드. 없으면 Tubular Bells 로드 후 Pitch -12로 낮춤.',
+  'Sampler Amp Envelope: Attack 0ms / Decay 0ms / Sustain 100% / Release 최대값. Filter Type Lowpass / Cutoff 7000Hz / Resonance 0%. Tubular Bells 대체 시 Sampler 좌상단 Tune: Semitones -12.',
+  '볼륨 -10.0dB / 팬 0.',
+  'Band 1 High Pass ON / Frequency 40Hz / Slope 12dB per Oct. Band 4 Peak / Frequency 500Hz / Gain -2.0dB / Q 0.80. Band 8 Low Cut(LPF) ON / Frequency 9000Hz / Slope 12dB per Oct.',
+  'Insert 1 Channel EQ.',
+  'Send 2 > Bus 2 / -5.0dB. Send 1 > Bus 1 / -8.0dB.',
+  'CC11 고정 115, 페이드 없음. 벨로시티는 첫 타 78 / 뒤따르는 타 54로 앱이 자동 생성한다 — 균일하게 만들지 말 것.')
+};
+function chordFades(piece){
+  /* 코드 경계 CC11 크로스페이드 — 골에서 45, 정점 127. 직선 램프 */
+  const ccs=[];
+  const chords=piece.chords;
+  chords.forEach((c,i)=>{
+    const F=Math.min(2.5,c.dur*0.25);
+    const inStart=c.t;
+    const v0=i===0?0:45;
+    ccs.push(...ccRamp(inStart,inStart+F,v0,127));
+    const outEnd=c.t+c.dur;
+    const v1=i===chords.length-1?0:45;
+    ccs.push(...ccRamp(outEnd-F,outEnd,127,v1));
+  });
+  return ccs;
+}
+function droneFades(piece){
+  /* 단일 코드(정적 드론)용 — 시작 페이드인·종료 페이드아웃만 */
+  const L=piece.lengthSec;
+  const fi=Math.min(4,L*0.1),fo=Math.min(6,L*0.15);
+  return [...ccRamp(0,fi,0,127),...ccRamp(L-fo,L,127,0)];
+}
+function exportMIDI(){const piece=generate();
+  const isStatic=piece.chords.length===1;
+  const fades=isStatic?droneFades(piece):chordFades(piece);
+  const bo=state.bellOct||0;
+  const tr=[tempoTrack()];
+  const L=state.layers;
+  if(L.drone){
+    const drone=piece.chords.map(c=>({t:c.t,dur:c.dur,midi:piece.tonic,vel:64}));
+    tr.push(noteTrack(drone,4,93,
+      'Alchemy (Dark Drone Pad) | 드론·바닥',
+      DESC.drone,
+      fades));
+  }
+  if(L.sub){
+    const sub=piece.chords.map(c=>({t:c.t,dur:c.dur,midi:Math.max(24,piece.tonic-12),vel:58}));
+    tr.push(noteTrack(sub,9,38,
+      'Retro Synth (Sine Sub) | 서브 저역',
+      DESC.sub,
+      fades));
+  }
+  if(L.pad){
+    const pad=[];piece.chords.forEach(c=>c.midis.forEach(m=>pad.push({t:c.t,dur:c.dur,midi:m,vel:60})));
+    tr.push(noteTrack(pad,1,89,
+      'Alchemy (Soft Warm Pad) | 화성 본체',
+      DESC.pad,
+      fades));
+  }
+  if(L.choir){
+    const ch=[];piece.chords.forEach(c=>[c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach(m=>{let lm=m;while(lm>64)lm-=12;while(lm<50)lm+=12;ch.push({t:c.t,dur:c.dur,midi:lm,vel:58});}));
+    tr.push(noteTrack(ch,8,53,
+      'Alchemy (Vocal Pad · Oohs) | 합창 패드',
+      DESC.choir,
+      fades));
+  }
+  if(L.strings){
+    const st=[];piece.chords.forEach(c=>[c.midis[0],c.midis[0]+7].forEach(m=>{let lm=m;while(lm>54)lm-=12;while(lm<38)lm+=12;st.push({t:c.t,dur:c.dur,midi:lm,vel:64});}));
+    tr.push(noteTrack(st,5,42,
+      'Studio Strings (Legato) | 저역 현',
+      DESC.strings,
+      fades));
+  }
+  if(L.bell&&piece.bells.length){
+    const bell=piece.bells.map(b=>({t:b.t,dur:Math.min(b.decay,4),midi:b.midi+bo,vel:74}));
+    tr.push(noteTrack(bell,3,11,
+      'Sampler (Bell · Music Box) | 벨 포인트',
+      DESC.bell,
+      [{t:0,val:112}]));
+  }
+  if((piece.melody||[]).length){
+    const mel=piece.melody.map(n=>({t:n.t,dur:n.dur,midi:n.midi,vel:72}));
+    tr.push(noteTrack(mel,2,73,
+      'Alchemy (Airy Lead · Breath Flute) | 멜로디',
+      DESC.melody,
+      [{t:0,val:100}]));
+  }
+  if(L.handpan&&piece.bells.length){
+    const hp=piece.bells.map(b=>({t:b.t,dur:Math.min(b.decay*0.6,3),midi:b.midi+bo,vel:70}));
+    tr.push(noteTrack(hp,6,108,
+      'Sampler (Handpan · Metallic Perc) | 핸드팬',
+      DESC.handpan,
+      [{t:0,val:110}]));
+  }
+  if(L.tingsha){
+    const to=state.tingOct||0,tg=[];let tt=12;
+    while(tt<piece.lengthSec-3){let m=piece.tonic+24;while(m>100)m-=12;while(m<82)m+=12;tg.push({t:tt,dur:4,midi:m+to,vel:64});tt+=50;}
+    tr.push(noteTrack(tg,7,9,
+      'Sampler (Finger Cymbals · Glockenspiel) | 띵샤',
+      DESC.tingsha,
+      [{t:0,val:105}]));
+  }
+  if(L.gong){
+    const gg=[],tc=[piece.tonic-12,piece.tonic-12,piece.tonic-19,piece.tonic-17];let gt=4;
+    while(gt<piece.lengthSec-4){const hits=Math.random()<0.42?(Math.random()<0.28?3:2):1;
+      for(let k=0;k<hits&&gt<piece.lengthSec-2;k++){let m=tc[(Math.random()*tc.length)|0];while(m<28)m+=12;while(m>46)m-=12;gg.push({t:gt,dur:6,midi:m,vel:k?54:78});gt+=k<hits-1?0.7+Math.random()*1.2:0;}
+      gt+=9+Math.random()*22;}
+    tr.push(noteTrack(gg,10,14,
+      'Sampler (Gong · Tam-tam) | 대형 공',
+      DESC.gong,
+      [{t:0,val:115}]));
+  }
+  const fname=swFileName('mid');
+  const header=[...sbm('MThd'),...u32(6),...u16(1),...u16(tr.length),...u16(480)];
+  dlBlob(new Blob([new Uint8Array([...header,...tr.flat()])],{type:'audio/midi'}),fname);
+  toast('MIDI 저장됨 — 트랙명에 Logic 추천 악기 포함');}
+
+/* ---------- 오로라 비주얼 ---------- */
+const cv=$('aurora'),cx=cv.getContext('2d');let W,H,DPR;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';}
+resize();addEventListener('resize',resize);
+let phase=0;
+function aurora(){phase+=0.0016;
+  cx.clearRect(0,0,W,H);
+  // 깊은 밤 그라데이션
+  const bg=cx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#070a16');bg.addColorStop(1,'#0a0f22');cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+  const cols=[[70,199,166],[108,123,214],[185,140,217]];
+  const energy=playing?0.85:0.4;
+  for(let b=0;b<3;b++){const col=cols[b];const yBase=H*(0.32+b*0.13);
+    cx.beginPath();cx.moveTo(0,H);
+    for(let x=0;x<=W;x+=16*DPR){const n=Math.sin(x*0.0016+phase*(1+b*0.4)+b)*0.5+Math.sin(x*0.0007-phase*1.7+b*2)*0.5;
+      const y=yBase+n*H*0.10*(0.6+energy*0.7);cx.lineTo(x,y);}
+    cx.lineTo(W,H);cx.closePath();
+    const g=cx.createLinearGradient(0,yBase-H*0.2,0,H);
+    g.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},${0.0})`);
+    g.addColorStop(0.35,`rgba(${col[0]},${col[1]},${col[2]},${0.10*energy})`);
+    g.addColorStop(1,`rgba(${col[0]},${col[1]},${col[2]},0)`);
+    cx.fillStyle=g;cx.fill();}
+  // 별
+  cx.fillStyle='rgba(230,236,255,0.5)';
+  for(let i=0;i<60;i++){const x=(i*97.13%1)*W,y=((i*53.7)%1)*H*0.6;const tw=0.3+0.7*Math.abs(Math.sin(phase*3+i));cx.globalAlpha=tw*0.5;cx.fillRect(x,y,DPR,DPR);}
+  cx.globalAlpha=1;
+  requestAnimationFrame(aurora);
+}
+aurora();
+
+/* ---------- UI ---------- */
+function buildUI(){
+  const mo=$('moods');mo.innerHTML='';Object.entries(MOODS).forEach(([id,m])=>{const d=document.createElement('div');d.className='mood'+(id===state.mood?' sel':'');d.dataset.id=id;
+    d.innerHTML=`<div class="mn">${m.ko}</div><div class="md">${m.en}</div>`;d.onclick=()=>applyMood(id);mo.appendChild(d);});
+  const swr=$('swRoot');
+  if(swr){swr.innerHTML='';NOTE.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;swr.appendChild(o);});swr.value=state.root;}
+  const swo=$('swOct');if(swo)swo.value=state.swOct||0;
+  const swm=$('swMoon');if(swm)swm.checked=!!state.moon;
+  const sw=$('swGrid');
+  if(sw){sw.innerHTML='';Object.entries(SUMWAVE).forEach(([id,p])=>{
+    const d=document.createElement('div');
+    d.className='mood'+(id===state.sumwave?' sel':'');
+    d.dataset.sw=id;
+    const m=p.ko.match(/^(A\d×B\d)\s+(.*)$/);
+    const code=m?m[1]:'';
+    const name=m?m[2]:p.ko;
+    d.innerHTML=(code?'<div class="swcode">'+code+'</div>':'')
+      +'<div class="mn" style="font-size:15px">'+name+'</div><div class="md">'+p.md+'</div>';
+    d.onclick=()=>applySumwave(id);
+    sw.appendChild(d);});}
+  const r=$('root');r.innerHTML='';NOTE.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;r.appendChild(o);});r.value=state.root;
+  const md=$('mode');md.innerHTML='';Object.entries(MODES).forEach(([id,m])=>{const o=document.createElement('option');o.value=id;o.textContent=m.ko;md.appendChild(o);});md.value=state.mode;
+  const ly=$('layers');ly.innerHTML='';LAYERS.forEach(([k,ko])=>{const d=document.createElement('div');d.className='lyr'+(state.layers[k]?' on':'');d.dataset.k=k;
+    d.innerHTML=`<span class="dot"></span>${ko}`;d.onclick=()=>{state.layers[k]=!state.layers[k];d.classList.toggle('on',state.layers[k]);if(playing&&graph)applyLayerGains(graph,true);};ly.appendChild(d);});
+  syncVals();
+}
+function syncVals(){$('paceV').textContent=state.pace+'초';$('lenV').textContent=state.len+'분';$('spaceV').textContent=state.space;$('brightV').textContent=state.bright;$('moveV').textContent=state.move;
+  $('pace').value=state.pace;$('len').value=state.len;$('space').value=state.space;$('bright').value=state.bright;$('move').value=state.move;$('root').value=state.root;$('mode').value=state.mode;
+  $('harmony').value=state.harmony;$('tuning').value=state.tuning;$('binaural').value=state.binaural;
+  $('solfeggio').value=state.solfeggio;$('breath').value=state.breath;$('sleep').value=state.sleepMin;$('bellOct').value=state.bellOct||0;$('tingOct').value=state.tingOct||0;
+  $('loop').textContent=state.loop?'반복 켜짐':'반복 끄기';
+  const ae=$('autoEvolve');if(ae){ae.textContent=state.autoEvolve?'천천히 변화 중':'꺼짐';ae.classList.toggle('on',!!state.autoEvolve);}}
+function applySumwave(id){
+  const p=SUMWAVE[id];if(!p)return;
+  state.sumwave=id;
+  state.root=p.root;state.swOct=0;state.mode=p.mode||'pentaMin';
+  state.harmony=p.harmony||'static';state.droneVoicing=p.voicing;state.pulse=p.pulse?Object.assign({},p.pulse):null;
+  state.pace=p.pace;state.space=p.space;state.bright=p.bright;state.move=p.move;
+  if(state.moon&&id!=='tea'){
+    state.bright=Math.min(100,state.bright+14);
+    state.space=Math.min(100,state.space+8);
+  }
+  state.binaural='off';state.solfeggio='off';state.breath='off';
+  if(state.len<5)state.len=5;
+  state.layers=Object.assign({},SW_LAYERS_OFF,p.layers);
+  if(state.moon&&id!=='tea')state.layers.shimmer=1;
+  state.seed=(Math.random()*1e9)|0;
+  document.querySelectorAll('.mood').forEach(e=>e.classList.remove('sel'));
+  document.querySelectorAll('#swGrid .mood').forEach(e=>e.classList.toggle('sel',e.dataset.sw===id));
+  buildUI();
+  if(playing)play(false);else toast(p.ko+' — 재생 또는 WAV(심리스 루프)');
+}
+function clearSumwave(){state.sumwave=null;state.droneVoicing='full';state.pulse=null;
+  document.querySelectorAll('#swGrid .mood').forEach(e=>e.classList.remove('sel'));}
+function applyMood(id){clearSumwave();const m=MOODS[id];state.mood=id;state.mode=m.mode;state.pace=m.pace;state.space=m.space;state.bright=m.bright;state.move=m.move;
+  state.harmony=m.harmony;state.binaural=m.binaural;
+  state.harmony=m.harmony;state.binaural=m.binaural;state.breath=m.breath;
+  state.layers=Object.assign({},m.layers);state.prog=m.prog.slice();state.seed=(Math.random()*1e9)|0;
+  document.querySelectorAll('.mood').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));
+  buildUI();if(playing)play(false);}
+
+function resetAll(){state=defaults();document.querySelectorAll('#swGrid .mood').forEach(e=>e.classList.remove('sel'));document.querySelectorAll('.mood').forEach(e=>e.classList.toggle('sel',e.dataset.id===state.mood));
+  buildUI();if(playing)play(false);else toast('기본값으로 초기화');}
+
+/* 무드별 랜덤 추천 — 각 무드의 성격 안에서 변주 */
+const RECO={
+  stillness:{modes:['aeolian','dorian','phrygian'],nat:['off','off','rain'],bin:['theta','delta','off'],sol:['off','528','639','852'],harm:['static','static','evolving'],pace:[12,18],space:[78,92],bright:[22,40],move:[10,26]},
+  drift:{modes:['lydian','ionian','mixolydian','pentaMaj'],nat:['off','off','rain'],bin:['off','alpha'],sol:['off','off','528','639'],harm:['evolving'],pace:[7,12],space:[64,82],bright:[44,64],move:[30,52]},
+  aurora:{modes:['pentaMaj','lydian','ionian'],nat:['off','off','rain'],bin:['off','alpha'],sol:['off','528','741'],harm:['evolving'],pace:[6,11],space:[72,88],bright:[52,70],move:[38,58]},
+  tides:{modes:['dorian','aeolian','mixolydian'],nat:['ocean','ocean','off','rain'],bin:['off','theta'],sol:['off','639','528'],harm:['evolving'],pace:[8,13],space:[60,78],bright:[38,54],move:[28,46]},
+  tension:{modes:['phrygian','aeolian','dorian'],nat:['wind','wind','off'],bin:['off','off','theta'],sol:['off','396','417'],harm:['evolving'],pace:[10,16],space:[68,84],bright:[28,44],move:[36,56]},
+  bowls:{modes:['pentaMin','aeolian','phrygian'],nat:['off','off','rain'],bin:['theta','delta'],sol:['528','852','639','off'],harm:['static','static','evolving'],pace:[14,20],space:[80,94],bright:[30,46],move:[22,38]}
+};
+function recommend(){clearSumwave();const pick=a=>a[(Math.random()*a.length)|0],rng=([a,b])=>a+((Math.random()*(b-a+1))|0);
+  const mood=pick(Object.keys(MOODS));state.mood=mood;const R=RECO[mood]||RECO.drift; // 프리셋(무드)도 랜덤
+  state.root=(Math.random()*12)|0;state.mode=pick(R.modes);state.harmony=pick(R.harm);
+  state.binaural=pick(R.bin);state.solfeggio=pick(R.sol);
+  state.pace=rng(R.pace);state.space=rng(R.space);state.bright=rng(R.bright);state.move=rng(R.move);
+  state.prog=[0].concat([0,0,0].map(()=>1+((Math.random()*5)|0)));state.seed=(Math.random()*1e9)|0; // 무작위 진행
+  state.bellOct=pick([0,0,0,-12,-12,-24]);state.tingOct=pick([0,0,-12,12]);
+  // 악기도 랜덤 (악기마다 확률 다르게)
+  const prob={drone:0.95,pad:0.72,sub:0.7,strings:0.5,choir:0.42,bell:0.55,handpan:0.42,tingsha:0.4,melody:0.5,air:0.5,shimmer:0.42,gong:0.4};
+  const L={};LAYERS.forEach(([k])=>{L[k]=Math.random()<(prob[k]!==undefined?prob[k]:0.5)?1:0;});
+  if(!(L.drone||L.pad||L.strings||L.choir))L.drone=1; // 최소한의 지속음 보장
+  state.layers=L;
+  buildUI();if(playing)play(false);else toast('추천 적용 — 재생을 누르세요');}
+
+$('orb').onclick=()=>{if(playing)stopAudio();else play(false);};
+$('play').onclick=()=>{if(playing)stopAudio();else play(false);};
+$('loop').onclick=()=>{state.loop=!state.loop;syncVals();};
+$('autoEvolve').onclick=()=>{state.autoEvolve=!state.autoEvolve;syncVals();
+  if(!state.autoEvolve&&playing&&graph){const t=ctx.currentTime; // 끄면 슬라이더 값으로 부드럽게 복귀
+    graph.reverbWet.gain.setTargetAtTime(0.5+state.space/100*0.6,t,0.6);
+    graph.tone.frequency.setTargetAtTime(toneFreq(),t,0.6);
+    $('space').value=state.space;$('spaceV').textContent=state.space;$('bright').value=state.bright;$('brightV').textContent=state.bright;}};
+$('reseed').onclick=()=>{state.seed=(Math.random()*1e9)|0;if(playing)play(false);else toast('새 시드 — 재생을 누르세요');};
+$('wav').onclick=exportWAV;$('midi').onclick=exportMIDI;
+$('composeHead').onclick=()=>$('composePanel').classList.toggle('closed');
+$('genHead').onclick=()=>$('genSec').classList.toggle('closed');
+$('reset').onclick=resetAll;
+$('recommend').onclick=recommend;
+$('root').onchange=e=>{clearSumwave();state.root=+e.target.value;if(playing)play(false);};
+$('mode').onchange=e=>{clearSumwave();state.mode=e.target.value;if(playing)play(false);};
+$('harmony').onchange=e=>{clearSumwave();state.harmony=e.target.value;if(playing)play(false);};
+$('tuning').onchange=e=>{state.tuning=+e.target.value;if(playing)play(false);};
+$('binaural').onchange=e=>{state.binaural=e.target.value;if(playing)play(false);};
+$('solfeggio').onchange=e=>{state.solfeggio=e.target.value;if(playing)play(false);};
+$('bellOct').onchange=e=>{state.bellOct=+e.target.value;if(playing)play(false);};
+$('tingOct').onchange=e=>{state.tingOct=+e.target.value;if(playing)play(false);};
+$('instHead').onclick=()=>$('instSec').classList.toggle('closed');
+$('swHead').onclick=()=>$('swSec').classList.toggle('closed');
+$('swRoot').onchange=e=>{state.root=+e.target.value;state.seed=(Math.random()*1e9)|0;
+  if(playing)play(false);else toast('드론 루트: '+NOTE[state.root]+' — 프리셋 유지');};
+$('swOct').onchange=e=>{state.swOct=+e.target.value;
+  if(playing)play(false);};
+$('swSession').onclick=()=>{if(!session){startSession();}else if(session.mode==='standby'){armSession();}else{stopAudio();}};
+$('swMoon').onchange=e=>{state.moon=e.target.checked;
+  if(state.sumwave)applySumwave(state.sumwave);
+  toast(state.moon?'만월 스킨 — 고역·잔향 확장':'만월 스킨 해제');};
+$('breath').onchange=e=>{state.breath=e.target.value;};
+$('sleep').onchange=e=>{state.sleepMin=+e.target.value;if(playing){sleepDeadline=state.sleepMin>0?Date.now()+state.sleepMin*60000:null;play(false);}};
+['pace','len','space','bright','move'].forEach(k=>{$(k).oninput=e=>{state[k]=+e.target.value;syncVals();
+  if(playing&&graph){ // 재생 중 즉시 반영
+    if(k==='space')graph.reverbWet.gain.setTargetAtTime(0.5+state.space/100*0.6,ctx.currentTime,0.2);
+    if(k==='bright')graph.tone.frequency.setTargetAtTime(toneFreq(),ctx.currentTime,0.2);
+  }};});
+let toastT=null;function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+buildUI();setOrb(0);setInterval(()=>{if(!playing)setOrb(0);},33);
+</script>
+</body>
+</html>
