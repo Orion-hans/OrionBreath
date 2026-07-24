@@ -349,14 +349,23 @@ function genMelody(rng,piece){
 
 /* ---------- 오디오 엔진 (라이브 & 오프라인 공용) ---------- */
 const f2m=m=>(state.tuning||440)*Math.pow(2,(m-69)/12);
-function makeImpulse(ac,dur,decay,predelay){const rate=ac.sampleRate,pre=((predelay||0)*rate)|0,len=((rate*dur)|0)+pre,b=ac.createBuffer(2,len,rate);
+let _irCache=null; // 리버브 임펄스 1슬롯 캐시 — 같은 공간감이면 그래프 재생성 시 재사용
+let _nzCache={};   // 노이즈 버퍼 캐시 — 샘플레이트별 1개
+function makeImpulse(ac,dur,decay,predelay){
+  dur=Math.round(dur*4)/4;predelay=Math.round((predelay||0)*200)/200; // 캐시 적중률용 양자화(청감 차이 없음)
+  const key=ac.sampleRate+'|'+dur+'|'+decay+'|'+predelay;
+  if(_irCache&&_irCache.key===key)return _irCache.buf;
+  const rate=ac.sampleRate,pre=(predelay*rate)|0,len=((rate*dur)|0)+pre,b=ac.createBuffer(2,len,rate);
   for(let c=0;c<2;c++){const d=b.getChannelData(c);let lp=0;
     for(let i=0;i<len;i++){if(i<pre){d[i]=0;continue;}
       const t=(i-pre)/(len-pre),w=Math.random()*2-1,a=0.2+0.74*t; // 시간이 갈수록 강한 로우패스 → 어둡고 매끄러운 테일
       lp=lp*a+w*(1-a);d[i]=lp*Math.pow(1-t,decay);}}
-  return b;}
-function makeNoise(ac){const len=ac.sampleRate*3,b=ac.createBuffer(1,len,ac.sampleRate),d=b.getChannelData(0);
-  let lp=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;lp=lp*0.96+w*0.04;d[i]=lp*3.2;}return b;} // 부드러운(브라운계) 노이즈
+  _irCache={key,buf:b};return b;}
+function makeNoise(ac){
+  const key=ac.sampleRate;if(_nzCache[key])return _nzCache[key];
+  const len=ac.sampleRate*3,b=ac.createBuffer(1,len,ac.sampleRate),d=b.getChannelData(0);
+  let lp=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;lp=lp*0.96+w*0.04;d[i]=lp*3.2;}
+  _nzCache[key]=b;return b;} // 부드러운(브라운계) 노이즈
 
 function buildGraph(ac){
   const master=ac.createGain();master.gain.value=0.0;
@@ -575,45 +584,119 @@ function applyLayerGains(graph,ramp){const L=state.layers,now=ctx?ctx.currentTim
   set('drone',!!L.drone);set('pad',!!L.pad);set('shimmer',!!L.shimmer);set('strings',!!L.strings);set('gong',!!L.gong);set('choir',!!L.choir);
   set('bell',!!L.bell);set('handpan',!!L.handpan);set('tingsha',!!L.tingsha);set('melody',!!L.melody);set('sub',!!L.sub);set('air',!!L.air);}
 
-function scheduleAll(ac,graph,piece,t0){
-  const G=graph.buses;
-  // 모든 악기 레이어를 항상 스케줄(켜고 끄기는 버스 게인으로) → 재생 중 즉시 반영
-  droneVoice(ac,G.drone,t0,piece.lengthSec,piece.tonic);
-  subVoice(ac,G.sub,t0,piece.lengthSec,piece.tonic);
-  airLayer(ac,G.air,t0,piece.lengthSec,graph.noise);
-  piece.chords.forEach((c,ci)=>{const t=t0+c.t,dur=c.dur+(ci<piece.chords.length-1?1.2:3); // 다음 화음과 겹쳐 끊김 방지
+/* ---------- 이벤트 목록 — 오디오 노드 없이 "무엇을 언제"만 기술(가벼움) ---------- */
+function buildEvents(piece){
+  const ev=[],N=piece.chords.length;
+  const push=(t,tail,k,a)=>{a.t=t;a.tail=tail;a.k=k;ev.push(a);};
+  piece.chords.forEach((c,ci)=>{
+    const dPad=c.dur+(ci<N-1?1.2:3); // 다음 화음과 겹쳐 끊김 방지
     c.midis.forEach((m,i)=>{const pan=(i/(c.midis.length-1)-0.5)*0.7;
-      padVoice(ac,G.pad,t,dur,m,pan);
-      if(i%2===0)shimmerVoice(ac,G.shimmer,t,dur,m,-pan);});});
-  piece.chords.forEach((c,ci)=>{const t=t0+c.t,dur=c.dur+(ci<piece.chords.length-1?1.5:3.5); // 로우 현악(첼로)
-    [c.midis[0],c.midis[0]+7].forEach((m,i)=>{let lm=m;while(lm>54)lm-=12;while(lm<38)lm+=12;celloVoice(ac,G.strings,t,dur,lm,i?0.32:-0.32);});});
-  piece.chords.forEach((c,ci)=>{const t=t0+c.t,dur=c.dur+(ci<piece.chords.length-1?1.6:3.5); // 합창(모음 패드)
-    [c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>64)lm-=12;while(lm<50)lm+=12;choirVoice(ac,G.choir,t,dur,lm,i?0.28:-0.28,graph.noise);});});
+      push(c.t,dPad+9,'pad',{dur:dPad,midi:m,pan:pan});
+      if(i%2===0)push(c.t,dPad+8,'shimmer',{dur:dPad,midi:m,pan:-pan});});
+    const dStr=c.dur+(ci<N-1?1.5:3.5); // 로우 현악(첼로)
+    [c.midis[0],c.midis[0]+7].forEach((m,i)=>{let lm=m;while(lm>54)lm-=12;while(lm<38)lm+=12;
+      push(c.t,dStr+6,'cello',{dur:dStr,midi:lm,pan:i?0.32:-0.32});});
+    const dCh=c.dur+(ci<N-1?1.6:3.5); // 합창(모음 패드)
+    [c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>64)lm-=12;while(lm<50)lm+=12;
+      push(c.t,dCh+6,'choir',{dur:dCh,midi:lm,pan:i?0.28:-0.28});});
+  });
   // 대형 공 — 들쭉날쭉 패턴(가끔 쿵쿵 연타), 깊은 저음
   {const tc=[piece.tonic-12,piece.tonic-12,piece.tonic-19,piece.tonic-17];let gt=4;
    while(gt<piece.lengthSec-4){const hits=Math.random()<0.42?(Math.random()<0.28?3:2):1;
      for(let k=0;k<hits&&gt<piece.lengthSec-2;k++){let m=tc[(Math.random()*tc.length)|0];while(m<28)m+=12;while(m>46)m-=12;
-       gongVoice(ac,G.gong,t0+gt,m,(Math.random()*2-1)*0.35,graph.noise,k?0.62:1);
+       push(gt,17,'gong',{midi:m,pan:(Math.random()*2-1)*0.35,lvl:k?0.62:1});
        gt+=k<hits-1?0.65+Math.random()*1.3:0;}
      gt+=9+Math.random()*22;}}
   const bo=state.bellOct||0;
   piece.bells.forEach((b,i)=>{const pan=((i*0.37)%1-0.5)*0.9;
-    bellVoice(ac,G.bell,t0+b.t,b.midi+bo,b.decay,pan,graph.noise);
-    handpanVoice(ac,G.handpan,t0+b.t,b.midi+bo,b.decay,-pan);});
+    push(b.t,b.decay+2,'bell',{midi:b.midi+bo,decay:b.decay,pan:pan});
+    push(b.t,5,'handpan',{midi:b.midi+bo,decay:b.decay,pan:-pan});});
   // 띵샤 — 아주 드물게, 높은 음역(토닉 2옥타브 위·5도) + 음역 오프셋, 긴 여운
-  const to=state.tingOct||0;let tt=12;while(tt<piece.lengthSec-3){let m=piece.tonic+(Math.random()<0.5?24:31);while(m>100)m-=12;while(m<82)m+=12;
-    tingshaVoice(ac,G.tingsha,t0+tt,m+to,(Math.random()*2-1)*0.4);tt+=40+Math.random()*24;}
-  if(piece.melody)piece.melody.forEach((n,i)=>melodyVoice(ac,G.melody,t0+n.t,n.dur,n.midi,((i*0.41)%1-0.5)*0.5));
-  applyLayerGains(graph,false); // 초기 on/off 반영
-  // 바이노럴 / 솔페지오(선택 변경 시에는 재생성)
-  binauralLayer(ac,graph.master,t0,piece.lengthSec,piece.tonic);
-  if(state.solfeggio!=='off')solfeggioTone(ac,graph.master,t0,piece.lengthSec,+state.solfeggio);
+  const to=state.tingOct||0;let tt=12;
+  while(tt<piece.lengthSec-3){let m=piece.tonic+(Math.random()<0.5?24:31);while(m>100)m-=12;while(m<82)m+=12;
+    push(tt,10,'tingsha',{midi:m+to,pan:(Math.random()*2-1)*0.4});tt+=40+Math.random()*24;}
+  if(piece.melody)piece.melody.forEach((n,i)=>push(n.t,n.dur+5,'melody',{dur:n.dur,midi:n.midi,pan:((i*0.41)%1-0.5)*0.5}));
+  ev.sort((a,b)=>a.t-b.t);
+  return ev;
+}
+
+/* ---------- 보이스 슬롯 — 끝나면 통째로 disconnect 해서 그래프에서 제거 ---------- */
+let slotQ=[]; // 정리 대기 목록 {n:슬롯게인, at:해제시각(ac시간)}
+function voiceSlot(ac,G,endAt,live){const s=ac.createGain();s.gain.value=1;s.connect(G);
+  if(live)slotQ.push({n:s,at:endAt});return s;}
+function sweepSlots(now){let w=0;
+  for(let i=0;i<slotQ.length;i++){const q=slotQ[i];
+    if(q.at<=now){try{q.n.disconnect();}catch(e){}} else slotQ[w++]=q;}
+  slotQ.length=w;}
+function flushSlots(){for(let i=0;i<slotQ.length;i++){try{slotQ[i].n.disconnect();}catch(e){}}slotQ.length=0;}
+
+function fireEvent(ac,g,e,t0,live){
+  const B=g.buses,t=t0+e.t,end=t0+e.t+e.tail;
+  switch(e.k){
+    case 'pad':     padVoice(ac,voiceSlot(ac,B.pad,end,live),t,e.dur,e.midi,e.pan);break;
+    case 'shimmer': shimmerVoice(ac,voiceSlot(ac,B.shimmer,end,live),t,e.dur,e.midi,e.pan);break;
+    case 'cello':   celloVoice(ac,voiceSlot(ac,B.strings,end,live),t,e.dur,e.midi,e.pan);break;
+    case 'choir':   choirVoice(ac,voiceSlot(ac,B.choir,end,live),t,e.dur,e.midi,e.pan,g.noise);break;
+    case 'gong':    gongVoice(ac,voiceSlot(ac,B.gong,end,live),t,e.midi,e.pan,g.noise,e.lvl);break;
+    case 'bell':    bellVoice(ac,voiceSlot(ac,B.bell,end,live),t,e.midi,e.decay,e.pan,g.noise);break;
+    case 'handpan': handpanVoice(ac,voiceSlot(ac,B.handpan,end,live),t,e.midi,e.decay,e.pan);break;
+    case 'tingsha': tingshaVoice(ac,voiceSlot(ac,B.tingsha,end,live),t,e.midi,e.pan);break;
+    case 'melody':  melodyVoice(ac,voiceSlot(ac,B.melody,end,live),t,e.dur,e.midi,e.pan);break;
+  }
+}
+
+/* ---------- 지속 레이어 — 길이와 무관하게 노드 수 고정 ---------- */
+function scheduleContinuous(ac,g,piece,t0){
+  droneVoice(ac,g.buses.drone,t0,piece.lengthSec,piece.tonic);
+  subVoice(ac,g.buses.sub,t0,piece.lengthSec,piece.tonic);
+  airLayer(ac,g.buses.air,t0,piece.lengthSec,g.noise);
+  applyLayerGains(g,false); // 초기 on/off 반영
+  binauralLayer(ac,g.master,t0,piece.lengthSec,piece.tonic);
+  if(state.solfeggio!=='off')solfeggioTone(ac,g.master,t0,piece.lengthSec,+state.solfeggio);
+}
+
+/* 전곡 일괄 스케줄 — 오프라인 렌더 전용(실시간 제약 없음) */
+function scheduleAll(ac,g,piece,t0){
+  scheduleContinuous(ac,g,piece,t0);
+  const ev=buildEvents(piece);
+  for(let i=0;i<ev.length;i++)fireEvent(ac,g,ev[i],t0,false);
 }
 
 /* ---------- 라이브 재생 ---------- */
 let ctx,graph,analyser,playing=false,curPiece=null,stopTimer=null,raf2=null,startAt=0,sleepDeadline=null;
 function audioCtx(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();}return ctx;}
 let breathAnchor=0;
+
+/* ---------- 룩어헤드 스케줄러 — 20초 창만 미리 예약, 3초마다 보충 ---------- */
+/* 전곡을 한 번에 만들면 렌더 그래프에 수천 노드가 동시 삽입돼 오디오 스레드가 굶는다.
+   창 단위로 밀어 넣고 끝난 슬롯은 즉시 disconnect → 길이와 무관하게 노드 수가 일정하다. */
+const LOOKAHEAD=20, PUMP_MS=3000;
+let schedEvents=[],schedIdx=0,schedTimer=null;
+function pumpScheduler(){
+  if(!ctx||!graph){return;}
+  const now=ctx.currentTime, el=now-startAt;
+  const la=Math.min(LOOKAHEAD,6+Math.max(0,el)*1.5); // 시작·이음새 순간의 노드 폭주 방지 — 창을 서서히 넓힌다
+  const horizon=el+la;
+  while(schedIdx<schedEvents.length&&schedEvents[schedIdx].t<horizon){
+    fireEvent(ctx,graph,schedEvents[schedIdx],startAt,true);schedIdx++;}
+  sweepSlots(now);
+}
+function startScheduler(ac,g,piece,t0,handover){
+  if(schedTimer){clearInterval(schedTimer);schedTimer=null;}
+  if(handover>0&&ctx){const at=ctx.currentTime+handover; // 루프 전환 — 이전 슬롯은 크로스페이드 뒤 정리
+    for(let i=0;i<slotQ.length;i++)if(slotQ[i].at>at)slotQ[i].at=at;}
+  else flushSlots();
+  schedEvents=buildEvents(piece);schedIdx=0;
+  scheduleContinuous(ac,g,piece,t0);
+  pumpScheduler();
+  schedTimer=setInterval(pumpScheduler,PUMP_MS);
+}
+function haltScheduler(deferSec){
+  if(schedTimer){clearInterval(schedTimer);schedTimer=null;}
+  schedEvents=[];schedIdx=0;
+  if(deferSec>0)setTimeout(flushSlots,deferSec*1000); else flushSlots();
+}
+
 function play(isLoop){
   let oldGraph=null;
   if(isLoop&&playing&&graph){
@@ -630,7 +713,7 @@ function play(isLoop){
   analyser=ac.createAnalyser();analyser.fftSize=256;graph.master.connect(analyser);
   const t0=ac.currentTime+0.15;startAt=t0;
   breathAnchor=(typeof performance!=='undefined'?performance.now():Date.now())/1000+0.15;
-  scheduleAll(ac,graph,curPiece,t0);
+  startScheduler(ac,graph,curPiece,t0,oldGraph?4:0);
   graph.master.gain.cancelScheduledValues(t0);graph.master.gain.setValueAtTime(0.0001,t0);
   graph.master.gain.exponentialRampToValueAtTime(0.6,t0+(oldGraph?3.0:1.8)); // 루프 전환은 더 긴 크로스페이드
   if(oldGraph){
@@ -775,7 +858,7 @@ function startSession(){
   const cueG=ac.createGain();cueG.gain.value=0.5;cueG.connect(graph.tone);
   const t0=ac.currentTime+0.15;startAt=t0;
   breathAnchor=(typeof performance!=='undefined'?performance.now():Date.now())/1000+0.15;
-  scheduleAll(ac,graph,curPiece,t0);
+  startScheduler(ac,graph,curPiece,t0,0);
   graph.master.gain.cancelScheduledValues(t0);
   graph.master.gain.setValueAtTime(0.0001,t0);
   graph.master.gain.exponentialRampToValueAtTime(0.6,t0+1.8);
@@ -835,6 +918,7 @@ function endSessionState(){
 }
 function stopAudio(silent){
   endSessionState();
+  haltScheduler(0.9); // 마스터 페이드가 끝난 뒤 슬롯 정리
   if(stopTimer){clearTimeout(stopTimer);stopTimer=null;}
   playing=false;if(!silent)sleepDeadline=null;
   if(ctx){try{graph&&graph.master.gain.cancelScheduledValues(ctx.currentTime);}catch(e){}
