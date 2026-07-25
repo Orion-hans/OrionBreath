@@ -18,9 +18,9 @@ html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--star);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   overflow-x:hidden;overflow-y:auto;min-height:100%;position:relative}
 #aurora{position:fixed;inset:0;z-index:0;display:block}
-.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:26px 18px 60px;min-height:100vh;
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:14px 18px 60px;min-height:100vh;
   display:flex;flex-direction:column}
-header{text-align:center;margin:20px 0 4px}
+header{text-align:center;margin:6px 0 2px}
 .brand{font-family:"Cinzel",Georgia,serif;font-weight:600;letter-spacing:.06em;white-space:nowrap;
   font-size:clamp(23px,6.2vw,44px);margin:0;line-height:1.15;
   background:linear-gradient(100deg,var(--aurora1),var(--aurora2) 52%,var(--aurora3));
@@ -30,8 +30,24 @@ header{text-align:center;margin:20px 0 4px}
 .tag{color:var(--muted);font-size:12.5px;letter-spacing:.32em;margin-top:6px;text-transform:uppercase}
 
 /* breathing orb */
-.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:18px 0 8px;flex:0 0 auto}
-.orb{position:relative;width:200px;height:200px;border:none;background:none;cursor:pointer;padding:0;outline:none}
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;margin:8px 0 8px;flex:0 0 auto}
+.field{position:relative;
+  width:calc(100vw - 4px);max-width:none;
+  margin-left:calc(-50vw + 50% + 2px);margin-right:calc(-50vw + 50% + 2px); /* wrap 좌우 패딩을 뚫고 화면 끝까지 */
+  height:min(calc(100vw - 4px),42vh);
+  border-radius:0;overflow:visible;
+  border:none;background:transparent; /* 뒤 배경(우드 그라데이션·결)이 그대로 비치도록 — 경계 없음 */
+  touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#padRip{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+.padq{position:absolute;width:50%;height:50%;display:flex;pointer-events:none;z-index:1;transition:background 1.1s ease-out}
+.padq span{font-size:11px;letter-spacing:.14em;color:var(--muted);opacity:.28;text-transform:uppercase}
+.padq.tl{left:0;top:0;align-items:flex-start;justify-content:flex-start;padding:11px 0 0 13px}
+.padq.tr{right:0;top:0;align-items:flex-start;justify-content:flex-end;padding:11px 13px 0 0}
+.padq.bl{left:0;bottom:0;align-items:flex-end;justify-content:flex-start;padding:0 0 11px 13px}
+.padq.br{right:0;bottom:0;align-items:flex-end;justify-content:flex-end;padding:0 13px 11px 0}
+.padq.lit{background:radial-gradient(circle at center,rgba(224,168,96,.07),transparent 72%)}
+/* 원은 필드 정중앙에 겹친다 — 재생 버튼 */
+.orb{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:172px;height:172px;border:none;background:none;cursor:pointer;padding:0;outline:none;z-index:3}
 .orb .ring{position:absolute;inset:0;border-radius:50%}
 .orb .glow{position:absolute;inset:-30%;border-radius:50%;
   background:radial-gradient(circle at 50% 45%,rgba(224,168,96,.5),rgba(201,151,90,.28) 40%,rgba(154,106,58,.14) 62%,transparent 72%);
@@ -40,6 +56,9 @@ header{text-align:center;margin:20px 0 4px}
   background:radial-gradient(circle at 42% 38%,#fbf1dd,#f0d6a4 30%,#c9975a 64%,#5a3a1e 100%);
   box-shadow:0 0 50px rgba(224,168,96,.5), inset 0 0 30px rgba(255,240,215,.35)}
 .orb .halo{position:absolute;inset:8%;border-radius:50%;border:1px solid rgba(224,196,150,.24)}
+.orb .brings{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:0}
+.orb .bring{position:absolute;left:50%;top:50%;border-radius:50%;border:1px solid rgba(224,168,96,.5);
+  transform:translate(-50%,-50%);opacity:0;will-change:width,height,opacity}
 .orb-label{margin-top:16px;color:var(--muted);font-size:12px;letter-spacing:.3em;text-transform:uppercase}
 .orb-sub{margin-top:4px;color:var(--muted);font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
 
@@ -92,13 +111,15 @@ button.btn:disabled{opacity:.4;cursor:default}
 button.btn.sm{flex:0 0 auto;min-width:0;padding:13px 16px}
 button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
 .lenbar{border:1px solid var(--panel-bd);background:var(--panel);border-radius:14px;padding:2px 16px;margin-top:9px;backdrop-filter:blur(10px)}
-.lenbar .row{border-top:none}
+.lenbar .row{border-top:1px solid var(--line)}
+.lenbar .row:first-child{border-top:none}
 .foot{color:var(--muted);font-size:11px;text-align:center;margin-top:20px;letter-spacing:.05em;line-height:1.7;opacity:.8}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:5;
   background:rgba(28,19,11,.95);border:1px solid var(--panel-bd);color:var(--star);padding:11px 18px;border-radius:12px;
   font-size:13px;opacity:0;pointer-events:none;transition:.3s;backdrop-filter:blur(10px)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:520px){.orb{width:172px;height:172px}
+@media(max-width:520px){.orb{width:150px;height:150px}
+  .stage{gap:12px}
   .mood{padding:10px 7px}.mood .mn{font-size:16px}.mood .md{font-size:9px;letter-spacing:.02em}
   .lyr{padding:8px 7px;font-size:11px;gap:5px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
@@ -106,6 +127,7 @@ button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
 </head>
 <body>
 <canvas id="aurora"></canvas>
+<canvas id="padRip"></canvas>
 <div class="wrap">
   <header>
     <h1 class="brand">DongKyung Breath</h1>
@@ -113,11 +135,20 @@ button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
   </header>
 
   <div class="stage">
-    <button class="orb" id="orb" aria-label="재생/정지">
-      <div class="glow" id="glow"></div>
-      <div class="halo"></div>
-      <div class="core" id="core"></div>
-    </button>
+    <div class="field" id="pad" aria-label="4분면 연주 필드 — 탭·홀드·드래그">
+      <div class="padq tl"><span>띵샤</span></div>
+      <div class="padq tr"><span>핸드팬</span></div>
+      <div class="padq bl"><span>싱잉볼</span></div>
+      <div class="padq br"><span>첼로</span></div>
+      <button class="orb" id="orb" aria-label="재생/정지">
+        <div class="brings" id="brings" aria-hidden="true">
+          <span class="bring"></span><span class="bring"></span><span class="bring"></span>
+        </div>
+        <div class="glow" id="glow"></div>
+        <div class="halo"></div>
+        <div class="core" id="core"></div>
+      </button>
+    </div>
     <div class="orb-label" id="orbLabel">눌러서 시작</div>
     <div class="orb-sub" id="breathCue" style="letter-spacing:.25em;min-height:16px"></div>
     <div class="orb-sub" id="orbSub">—</div>
@@ -131,6 +162,7 @@ button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
 
   <div class="lenbar">
     <div class="row"><div class="lab">길이</div><input type="range" id="len" min="5" max="60" step="5" value="20"><div class="val" id="lenV">20분</div></div>
+    <div class="row"><div class="lab">호흡 가이드</div><select id="breath"><option value="off">없음</option><option value="coherent">코히런트 호흡 (공명 5.5초)</option><option value="six">공명 호흡 (6·6)</option><option value="box">박스 호흡 (4·4·4·4)</option><option value="b478">4-7-8 호흡 (Weil)</option><option value="ext46">날숨 연장 호흡 (4·6)</option><option value="ext48">날숨 연장 심화 (4·8)</option><option value="sigh">생리적 한숨 (이중 들숨·긴 날숨)</option></select></div>
   </div>
 
   <div class="moods" id="moods"></div>
@@ -166,8 +198,6 @@ button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
           <div class="row"><div class="lab">띵샤 음역</div><select id="tingOct"><option value="-12">낮게 (-1옥타브)</option><option value="0">기본</option><option value="12">높게 (+1옥타브)</option></select></div>
         </div>
       </div>
-      <div class="row"><div class="lab">호흡 가이드</div><select id="breath"><option value="off">없음</option><option value="coherent">코히런트 5.5초</option><option value="six">느리게 6·6</option><option value="box">박스 4·4·4·4</option><option value="b478">4-7-8</option><option value="ext46">날숨 연장 4·6</option><option value="ext48">깊은 날숨 4·8</option><option value="sigh">이중 들숨 한숨 4·1·8</option></select></div>
-      <div class="row"><div class="lab">슬립 타이머</div><select id="sleep"><option value="0">끄기</option><option value="10">10분</option><option value="20">20분</option><option value="30">30분</option><option value="45">45분</option><option value="60">60분</option></select></div>
       <div class="row"><div class="lab">흐름</div><input type="range" id="pace" min="4" max="20" step="1" value="9"><div class="val" id="paceV">9초</div></div>
       <div class="row"><div class="lab">공간감</div><input type="range" id="space" min="0" max="100" step="1" value="70"><div class="val" id="spaceV">70</div></div>
       <div class="row"><div class="lab">밝기</div><input type="range" id="bright" min="0" max="100" step="1" value="46"><div class="val" id="brightV">46</div></div>
@@ -207,7 +237,7 @@ const MODES={
 const MOODS={
   stillness:{ko:'Stillness',en:'명상',mode:'aeolian',pace:14,space:84,bright:30,move:18,harmony:'static',binaural:'theta',breath:'coherent',
     layers:{drone:1,pad:1,bell:1,sub:1,air:1,shimmer:0,melody:0,strings:1},bellDecay:7,prog:[0,5,3,5]},
-  drift:{ko:'Drift',en:'앰비언트',mode:'lydian',pace:9,space:72,bright:52,move:42,harmony:'evolving',binaural:'off',breath:'off',
+  drift:{ko:'Drift',en:'앰비언트',mode:'lydian',pace:9,space:72,bright:52,move:42,harmony:'evolving',binaural:'off',breath:'coherent',
     layers:{drone:1,pad:1,bell:1,sub:1,air:1,shimmer:1,melody:1,strings:0},bellDecay:5,prog:[0,1,5,3]},
   aurora:{ko:'Aurora',en:'몽환',mode:'pentaMaj',pace:8,space:80,bright:60,move:50,harmony:'evolving',binaural:'off',breath:'off',
     layers:{drone:1,pad:1,bell:1,sub:0,air:1,shimmer:1,melody:1,strings:0},bellDecay:6,prog:[0,3,1,4]},
@@ -247,7 +277,7 @@ const SUMWAVE={
 const LAYERS=[['drone','드론'],['pad','패드'],['choir','합창'],['strings','로우 현악'],['gong','대형 공'],['bell','벨/볼'],['handpan','핸드팬'],['tingsha','띵샤'],['melody','멜로디'],['sub','서브'],['air','대기음'],['shimmer','샤이머']];
 
 function defaults(){return {mood:'drift',root:10,mode:'lydian',pace:9,len:20,space:70,bright:46,move:40,tuning:440,harmony:'evolving',binaural:'off',
-  solfeggio:'off',breath:'off',sleepMin:0,bellOct:0,tingOct:0,autoEvolve:false,sumwave:null,droneVoicing:'full',pulse:null,swOct:0,moon:false,
+  solfeggio:'off',breath:'coherent',bellOct:0,tingOct:0,autoEvolve:false,sumwave:null,droneVoicing:'full',pulse:null,swOct:0,moon:false,
   layers:Object.assign({},MOODS.drift.layers),prog:MOODS.drift.prog.slice(),seed:(Math.random()*1e9)|0,loop:true};}
 let state=defaults();
 
@@ -661,7 +691,7 @@ function scheduleAll(ac,g,piece,t0){
 }
 
 /* ---------- 라이브 재생 ---------- */
-let ctx,graph,analyser,playing=false,curPiece=null,stopTimer=null,raf2=null,startAt=0,sleepDeadline=null;
+let ctx,graph,analyser,playing=false,curPiece=null,stopTimer=null,raf2=null,startAt=0;
 function audioCtx(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();}return ctx;}
 let breathAnchor=0;
 
@@ -725,7 +755,6 @@ function play(isLoop){
     stopAudio(true);
   }
   const ac=audioCtx();if(ac.state==='suspended')ac.resume();
-  if(!isLoop)sleepDeadline=state.sleepMin>0?Date.now()+state.sleepMin*60000:null;
   curPiece=generate();
   graph=buildGraph(ac);
   analyser=ac.createAnalyser();analyser.fftSize=256;graph.master.connect(analyser);
@@ -742,13 +771,9 @@ function play(isLoop){
   }
   playing=true;$('play').textContent='정지';$('orbLabel').textContent='재생 중';$('glow').style.opacity='1';
   acquireWakeLock(); // 재생 중 화면 켜짐 유지 — 화면 꺼짐에 의한 오디오 중단 방지
-  let endSec=curPiece.lengthSec,sleepStop=false;
-  if(sleepDeadline){const rem=(sleepDeadline-Date.now())/1000;
-    if(rem<=curPiece.lengthSec+0.5){endSec=Math.max(2,rem);sleepStop=true;
-      const fadeStart=Math.max(0.1,rem-15);
-      try{graph.master.gain.setValueAtTime(0.6,t0+fadeStart);graph.master.gain.exponentialRampToValueAtTime(0.0001,t0+rem);}catch(e){}}}
-  const loopLead=state.loop&&!sleepStop?Math.max(1,endSec-2.5):endSec+2.2;
-  stopTimer=setTimeout(()=>{ if(sleepStop){stopAudio();} else if(state.loop&&playing){play(true);} else stopAudio(); }, loopLead*1000);
+  let endSec=curPiece.lengthSec;
+  const loopLead=state.loop?Math.max(1,endSec-2.5):endSec+2.2;
+  stopTimer=setTimeout(()=>{ if(state.loop&&playing){play(true);} else stopAudio(); }, loopLead*1000);
   meterLoop();
 }
 /* ---------- 숨 웨이브 세션 모드 — 레벨 아크 자동 주행 ---------- */
@@ -853,7 +878,7 @@ function stopAudio(silent){
   haltScheduler(0.9); // 마스터 페이드가 끝난 뒤 슬롯 정리
   releaseWakeLock();  // 정지 시 화면 켜짐 유지 해제
   if(stopTimer){clearTimeout(stopTimer);stopTimer=null;}
-  playing=false;if(!silent)sleepDeadline=null;
+  playing=false;
   if(ctx){try{graph&&graph.master.gain.cancelScheduledValues(ctx.currentTime);}catch(e){}
     if(graph){try{graph.master.gain.setTargetAtTime(0.0001,ctx.currentTime,0.3);}catch(e){}}
     const old=graph;setTimeout(()=>{try{old&&old.master.disconnect();}catch(e){}},600);}
@@ -874,7 +899,6 @@ function meterLoop(){if(!playing){return;}
   }
   const el=ctx.currentTime-startAt,tot=curPiece.lengthSec;
   let label=fmt(Math.max(0,el))+' / '+fmt(tot);
-  if(sleepDeadline){const rem=Math.max(0,(sleepDeadline-Date.now())/1000);label+='  ·  💤 '+fmt(rem);}
   $('orbSub').textContent=label;
   raf2=requestAnimationFrame(meterLoop);
 }
@@ -886,25 +910,55 @@ function breathState(now){const pat=BREATH[state.breath];if(!pat)return null;
   for(let i=0;i<pat.length;i++){const[lab,d]=pat[i];if(x<d)return{lab,frac:x/d,remain:d-x,i,pat};x-=d;}
   return{lab:pat[0][0],frac:0,remain:pat[0][1],i:0,pat};}
 const PULSE=7.2; // 느린 호흡/심장 주기(초)
-const ease=b=>b*b*(3-2*b); // 부드러운 가감속
+const ease=b=>b*b*(3-2*b); // 부드러운 가감속(smoothstep)
+const easeIO=b=>b<0.5?4*b*b*b:1-Math.pow(-2*b+2,3)/2; // 더 깊은 가감속(들·날숨용)
+let breathP=0; // 현재 호흡 위치(0=완전 날숨, 1=완전 들숨) — 링·글로우 공유
 function setOrb(lvl){
   const now=((typeof performance!=='undefined'&&performance.now)?performance.now():Date.now())/1000;
-  const lo=0.90,hi=1.10;let sc,gx;const bs=breathState(now);
-  if(bs){ let p;
-    if(bs.lab==='들숨')p=ease(bs.frac);
-    else if(bs.lab==='날숨')p=1-ease(bs.frac);
-    else{const prev=bs.pat[(bs.i-1+bs.pat.length)%bs.pat.length][0];p=(prev==='들숨')?1:0;}
-    sc=lo+(hi-lo)*p;gx=p*0.16;
-    $('breathCue').textContent=bs.lab+' · '+Math.ceil(bs.remain);
+  let sc,gx,p,guiding=false;const bs=breathState(now);
+  if(bs){ guiding=true;
+    if(bs.lab==='들숨')p=easeIO(bs.frac);
+    else if(bs.lab==='들숨+')p=1;                       // 생리적 한숨의 두 번째 짧은 들숨 — 정점 유지
+    else if(bs.lab==='날숨')p=1-easeIO(bs.frac);
+    else{const prev=bs.pat[(bs.i-1+bs.pat.length)%bs.pat.length][0];p=(prev==='들숨'||prev==='들숨+')?1:0;} // 멈춤: 직전 상태 유지
+    // 가이드 시 확장폭을 크게 — 고요히 부풀고 가라앉는 느낌
+    sc=0.80+0.40*p; gx=0.06+p*0.30;
+    const cue=bs.lab==='들숨+'?'들숨 ▲':bs.lab;
+    $('breathCue').textContent=cue+'  ·  '+Math.ceil(bs.remain);
   } else { // 느리고 고급스러운 심장 박동(가감속)
     const b=ease(0.5-0.5*Math.cos(now*2*Math.PI/PULSE));
-    sc=0.94+b*0.12;gx=b*0.10;
+    p=b; sc=0.94+b*0.12; gx=b*0.10;
     if(state.breath==='off')$('breathCue').textContent='';
   }
+  breathP=p;
   sc+=lvl*0.06;
   const core=$('core'),glow=$('glow');
   if(core)core.style.transform=`scale(${sc.toFixed(3)})`;
-  if(glow)glow.style.transform=`scale(${(0.9+gx+lvl*0.2).toFixed(3)})`;
+  if(glow){
+    glow.style.transform=`scale(${(0.9+gx+lvl*0.2).toFixed(3)})`;
+    glow.style.opacity=(0.55+p*0.42).toFixed(3);                 // 들숨에 밝아지고 날숨에 잦아듦
+  }
+  if(core){ // 들숨에 코어가 따뜻하게 달아오름
+    core.style.boxShadow=`0 0 ${(40+p*46)|0}px rgba(224,168,96,${(0.32+p*0.3).toFixed(2)}), inset 0 0 30px rgba(255,240,215,.35)`;
+  }
+  updateBreathRings(guiding,bs,p);
+}
+/* 호흡 파동 링 — 들숨: 바깥에서 오브로 모여든다 / 날숨: 오브에서 퍼져나간다 */
+let _rings=null;
+function updateBreathRings(guiding,bs,p){
+  if(!_rings)_rings=[...document.querySelectorAll('.orb .bring')];
+  if(!_rings.length)return;
+  if(!guiding){ _rings.forEach(r=>{r.style.opacity='0';}); return; }
+  const inhale=bs&&(bs.lab==='들숨'||bs.lab==='들숨+');
+  const R_OUT=118, R_IN=54;   // px 지름 범위
+  const frac=bs?bs.frac:0;
+  _rings.forEach((r,i)=>{
+    const ph=((frac+i/_rings.length)%1+1)%1;
+    const rad=inhale ? R_OUT-ph*(R_OUT-R_IN) : R_IN+ph*(R_OUT-R_IN);
+    const op=Math.sin(ph*Math.PI)*0.42;
+    r.style.width=rad.toFixed(1)+'px';r.style.height=rad.toFixed(1)+'px';
+    r.style.opacity=op.toFixed(3);
+  });
 }
 const fmt=s=>{s=Math.round(s);return (Math.floor(s/60))+':'+String(s%60).padStart(2,'0');};
 
@@ -1325,7 +1379,7 @@ function buildUI(){
 function syncVals(){$('paceV').textContent=state.pace+'초';$('lenV').textContent=state.len+'분';$('spaceV').textContent=state.space;$('brightV').textContent=state.bright;$('moveV').textContent=state.move;
   $('pace').value=state.pace;$('len').value=state.len;$('space').value=state.space;$('bright').value=state.bright;$('move').value=state.move;$('root').value=state.root;$('mode').value=state.mode;
   $('harmony').value=state.harmony;$('tuning').value=state.tuning;$('binaural').value=state.binaural;
-  $('solfeggio').value=state.solfeggio;$('breath').value=state.breath;$('sleep').value=state.sleepMin;$('bellOct').value=state.bellOct||0;$('tingOct').value=state.tingOct||0;
+  $('solfeggio').value=state.solfeggio;$('breath').value=state.breath;$('bellOct').value=state.bellOct||0;$('tingOct').value=state.tingOct||0;
   $('loop').textContent=state.loop?'반복 켜짐':'반복 끄기';
   const ae=$('autoEvolve');if(ae){ae.textContent=state.autoEvolve?'천천히 변화 중':'꺼짐';ae.classList.toggle('on',!!state.autoEvolve);}}
 function applySumwave(id){
@@ -1415,14 +1469,146 @@ $('swSession').onclick=()=>{if(!session){startSession();}else if(session.mode===
 $('swMoon').onchange=e=>{state.moon=e.target.checked;
   if(state.sumwave)applySumwave(state.sumwave);
   toast(state.moon?'만월 스킨 — 고역·잔향 확장':'만월 스킨 해제');};
-$('breath').onchange=e=>{state.breath=e.target.value;};
-$('sleep').onchange=e=>{state.sleepMin=+e.target.value;if(playing){sleepDeadline=state.sleepMin>0?Date.now()+state.sleepMin*60000:null;play(false);}};
+$('breath').onchange=e=>{state.breath=e.target.value;
+  breathAnchor=((typeof performance!=='undefined'&&performance.now)?performance.now():Date.now())/1000; // 선택 즉시 그 호흡으로 미리보기 시작
+  if(state.breath==='off')$('breathCue').textContent='';};
 ['pace','len','space','bright','move'].forEach(k=>{$(k).oninput=e=>{state[k]=+e.target.value;syncVals();
   if(playing&&graph){ // 재생 중 즉시 반영
     if(k==='space')graph.reverbWet.gain.setTargetAtTime(0.5+state.space/100*0.6,ctx.currentTime,0.2);
     if(k==='bright')graph.tone.frequency.setTargetAtTime(toneFreq(),ctx.currentTime,0.2);
   }};});
 let toastT=null;function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+/* ================= 4분면 연주 패드 — sumwave-me 방식 ================= */
+/* 사분면=악기, 사분면 내 세로=음높이, 탭=스트라이크 / 홀드·드래그=지속. 재생 여부와 무관하게
+   자체 경량 오디오 체인(패드 게인 → 리버브 → 마스터)으로 독립 발성한다. */
+const PAD_QUADS={
+  tl:{inst:'tingsha', lo:77, hi:88},
+  tr:{inst:'handpan', lo:62, hi:81},
+  bl:{inst:'bowl',    lo:55, hi:74},
+  br:{inst:'cello',   lo:38, hi:52}
+};
+let padChain=null; // {inG, wet, dry, noise}
+function padAudio(){
+  const ac=audioCtx();if(ac.state==='suspended')ac.resume();
+  if(padChain)return padChain;
+  const inG=ac.createGain();inG.gain.value=0.9;
+  const dry=ac.createGain();dry.gain.value=0.82;
+  const wet=ac.createGain();wet.gain.value=0.5;
+  const rev=ac.createConvolver();rev.buffer=makeImpulse(ac,3.4,2.6,0.01);
+  inG.connect(dry);dry.connect(ac.destination);   // 마스터가 없을 수도 있으니 destination으로 직접
+  inG.connect(rev);rev.connect(wet);wet.connect(ac.destination);
+  padChain={inG,wet,dry,noise:makeNoise(ac)};
+  return padChain;
+}
+/* 현재 조성 음계로 스냅 — 가장 가까운 스케일 음 */
+function padLock(midi){
+  const pcs=scalePcs();const pc=((midi%12)+12)%12;
+  let best=pcs[0],bd=99;
+  pcs.forEach(p=>{let d=Math.abs(p-pc);d=Math.min(d,12-d);if(d<bd){bd=d;best=p;}});
+  let out=midi-pc+best;if(best-pc>6)out-=12;if(pc-best>6)out+=12;return out;
+}
+function padCalc(x,y){
+  const r=$('pad').getBoundingClientRect();
+  const lx=x-r.left, ly=y-r.top, w=r.width, h=r.height;
+  const qx=lx<w/2?'l':'r', qy=ly<h/2?'t':'b';
+  const q=PAD_QUADS[qy+qx];
+  const yin=qy==='t'?ly/(h/2):(ly-h/2)/(h/2); // 사분면 내부 세로 0~1
+  const norm=1-Math.max(0,Math.min(1,yin));    // 위로 갈수록 높은 음
+  const midi=padLock(q.lo+Math.round(norm*(q.hi-q.lo)));
+  const vel=Math.max(0.2,Math.min(1,0.32+norm*0.42+0.1));
+  const pan=Math.max(-0.6,Math.min(0.6,(lx/w-0.5)*1.2));
+  return {inst:q.inst,quad:qy+qx,midi,vel,pan,lx:lx*devicePixelRatio,ly:ly*devicePixelRatio,
+          sx:x*devicePixelRatio,sy:y*devicePixelRatio}; // 화면 절대 좌표(파문용)
+}
+function padStrike(c){
+  const ac=audioCtx(),P=padAudio(),t=ac.currentTime+0.003,G=P.inG;
+  if(c.inst==='bowl')      bellVoice(ac,G,t,c.midi,7,c.pan,P.noise);
+  else if(c.inst==='handpan') handpanVoice(ac,G,t,c.midi,4,c.pan);
+  else if(c.inst==='tingsha') tingshaVoice(ac,G,t,c.midi,c.pan);
+  else if(c.inst==='cello')   celloVoice(ac,G,t,2.6,c.midi,c.pan);
+  padRipple(c);
+  litQuad(c.quad);
+}
+function litQuad(q){const el=document.querySelector('.padq.'+q);if(!el)return;el.classList.add('lit');clearTimeout(el._lt);el._lt=setTimeout(()=>el.classList.remove('lit'),140);}
+
+/* 파문 — 패드 안에서만 */
+let padRips=[],padRAF=null,padCv,padCx;
+function padResize(){padCv=$('padRip');if(!padCv)return;padCv.width=innerWidth*devicePixelRatio;padCv.height=innerHeight*devicePixelRatio;padCx=padCv.getContext('2d');}
+function padRipple(c){padRips.push({x:(c.sx!=null?c.sx:c.lx),y:(c.sy!=null?c.sy:c.ly),t0:performance.now(),v:c.vel});if(padRips.length===1)requestAnimationFrame(drawPadRips);}
+function drawPadRips(){
+  if(!padCx)padResize();if(!padCx)return;
+  padCx.clearRect(0,0,padCv.width,padCv.height);
+  const now=performance.now();
+  padRips=padRips.filter(r=>{
+    const age=(now-r.t0)/1000;if(age>3.2)return false;
+    const k=age/3.2, soft=1-Math.pow(k,1.6);        // 완만한 페이드 곡선
+    const rad=(k*(0.5+Math.pow(k,0.6)))*300*devicePixelRatio*(0.7+r.v); // 화면 아래까지 크게 번짐
+    const op=Math.max(0,soft)*0.30*(0.5+r.v);
+    padCx.beginPath();padCx.arc(r.x,r.y,rad,0,Math.PI*2);
+    padCx.strokeStyle=`rgba(224,168,96,${op.toFixed(3)})`;padCx.lineWidth=1.1*devicePixelRatio;padCx.stroke();
+    if(k<0.35){ // 초반에만 은은한 채움 — 커지면 링만 남아 화면을 덮지 않음
+      const g=padCx.createRadialGradient(r.x,r.y,0,r.x,r.y,rad);
+      g.addColorStop(0,`rgba(224,168,96,${(op*0.3*(1-k/0.35)).toFixed(3)})`);g.addColorStop(1,'rgba(224,168,96,0)');
+      padCx.fillStyle=g;padCx.beginPath();padCx.arc(r.x,r.y,rad,0,Math.PI*2);padCx.fill();
+    }
+    return true;
+  });
+  if(padRips.length)padRAF=requestAnimationFrame(drawPadRips);
+}
+
+/* 지속음(홀드·드래그) — 탭보다 부드럽게 이어지는 보이스 */
+function padSustain(c){
+  const ac=audioCtx(),P=padAudio(),G=P.inG,t=ac.currentTime+0.003;
+  // 지속은 첼로/싱잉볼 계열이 자연스럽다 — 악기별 긴 발성
+  if(c.inst==='cello'){celloVoice(ac,G,t,5,c.midi,c.pan);}
+  else if(c.inst==='bowl'){bellVoice(ac,G,t,c.midi,9,c.pan,P.noise);}
+  else if(c.inst==='handpan'){handpanVoice(ac,G,t,c.midi,6,c.pan);}
+  else {tingshaVoice(ac,G,t,c.midi,c.pan);}
+  padRipple(c);litQuad(c.quad);
+}
+
+const padTouches=new Map();
+function padDown(e){
+  if(e.target.closest('#orb'))return; // 원(중앙)은 재생 버튼 — 연주 판정에서 제외
+  const pad=$('pad');pad.classList.add('touched');
+  const c=padCalc(e.clientX,e.clientY);
+  const h={t0:performance.now(),x:e.clientX,y:e.clientY,moved:false,c,lastRip:0,held:false,holdTimer:null};
+  h.holdTimer=setTimeout(()=>{ // 정지 홀드도 지속음으로 (move 없어도)
+    if(padTouches.has(e.pointerId)&&!h.held&&!h.moved){padSustain(h.c);h.held=true;h.lastRip=performance.now();}
+  },230);
+  padTouches.set(e.pointerId,h);
+  try{pad.setPointerCapture(e.pointerId);}catch(err){}
+  e.preventDefault();
+}
+function padMove(e){
+  const h=padTouches.get(e.pointerId);if(!h)return;
+  const now=performance.now();
+  if(Math.hypot(e.clientX-h.x,e.clientY-h.y)>16){h.moved=true;if(h.holdTimer){clearTimeout(h.holdTimer);h.holdTimer=null;}}
+  // 홀드 220ms 넘거나 이동하면 지속음으로 — 드래그 시 사분면 이동마다 새 음
+  if((h.moved||now-h.t0>220)&&now-h.lastRip>200){
+    const nc=padCalc(e.clientX,e.clientY);
+    if(!h.held||nc.midi!==h.c.midi||nc.inst!==h.c.inst){padSustain(nc);h.c=nc;h.held=true;h.lastRip=now;}
+  }
+  e.preventDefault();
+}
+function padUp(e){
+  const h=padTouches.get(e.pointerId);if(!h)return;
+  padTouches.delete(e.pointerId);
+  if(h.holdTimer)clearTimeout(h.holdTimer);
+  const dur=performance.now()-h.t0;
+  if(!h.moved&&!h.held&&dur<230)padStrike(h.c); // 짧은 탭 = 스트라이크
+  // 홀드·드래그는 이미 padSustain 으로 울렸으므로 잔향으로 자연 소멸
+}
+(function bindPad(){
+  const pad=$('pad');if(!pad)return;
+  pad.addEventListener('pointerdown',padDown);
+  pad.addEventListener('pointermove',padMove);
+  pad.addEventListener('pointerup',padUp);
+  pad.addEventListener('pointercancel',padUp);
+  addEventListener('resize',padResize);
+  padResize();
+})();
 
 buildUI();setOrb(0);setInterval(()=>{if(!playing)setOrb(0);},33);
 </script>
