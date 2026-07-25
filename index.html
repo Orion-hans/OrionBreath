@@ -91,6 +91,8 @@ button.btn.primary{background:linear-gradient(100deg,rgba(201,151,90,.24),rgba(1
 button.btn:disabled{opacity:.4;cursor:default}
 button.btn.sm{flex:0 0 auto;min-width:0;padding:13px 16px}
 button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
+.lenbar{border:1px solid var(--panel-bd);background:var(--panel);border-radius:14px;padding:2px 16px;margin-top:9px;backdrop-filter:blur(10px)}
+.lenbar .row{border-top:none}
 .foot{color:var(--muted);font-size:11px;text-align:center;margin-top:20px;letter-spacing:.05em;line-height:1.7;opacity:.8}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:5;
   background:rgba(28,19,11,.95);border:1px solid var(--panel-bd);color:var(--star);padding:11px 18px;border-radius:12px;
@@ -127,12 +129,16 @@ button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
     <button class="btn flat" id="reset" title="기본값으로 초기화">↺ 초기화</button>
   </div>
 
+  <div class="lenbar">
+    <div class="row"><div class="lab">길이</div><input type="range" id="len" min="5" max="60" step="5" value="20"><div class="val" id="lenV">20분</div></div>
+  </div>
+
   <div class="moods" id="moods"></div>
 
   <div class="panel" id="composePanel">
     <div class="ph" id="composeHead"><span>사운드 디자인</span><span class="ch">▾</span></div>
     <div class="pbody">
-      <div class="subsec closed" id="genSec">
+      <div class="subsec" id="genSec">
         <div class="sh" id="genHead"><span>음향 · 조성 <span class="shz">(변경 시 새로 생성)</span></span><span class="ch">▾</span></div>
         <div class="sbody">
           <div class="row"><div class="lab">조성</div><select id="root"></select><select id="mode"></select></div>
@@ -163,7 +169,6 @@ button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
       <div class="row"><div class="lab">호흡 가이드</div><select id="breath"><option value="off">없음</option><option value="coherent">코히런트 5.5초</option><option value="six">느리게 6·6</option><option value="box">박스 4·4·4·4</option><option value="b478">4-7-8</option><option value="ext46">날숨 연장 4·6</option><option value="ext48">깊은 날숨 4·8</option><option value="sigh">이중 들숨 한숨 4·1·8</option></select></div>
       <div class="row"><div class="lab">슬립 타이머</div><select id="sleep"><option value="0">끄기</option><option value="10">10분</option><option value="20">20분</option><option value="30">30분</option><option value="45">45분</option><option value="60">60분</option></select></div>
       <div class="row"><div class="lab">흐름</div><input type="range" id="pace" min="4" max="20" step="1" value="9"><div class="val" id="paceV">9초</div></div>
-      <div class="row"><div class="lab">길이</div><input type="range" id="len" min="1" max="10" step="1" value="3"><div class="val" id="lenV">3분</div></div>
       <div class="row"><div class="lab">공간감</div><input type="range" id="space" min="0" max="100" step="1" value="70"><div class="val" id="spaceV">70</div></div>
       <div class="row"><div class="lab">밝기</div><input type="range" id="bright" min="0" max="100" step="1" value="46"><div class="val" id="brightV">46</div></div>
       <div class="row"><div class="lab">움직임</div><input type="range" id="move" min="0" max="100" step="1" value="40"><div class="val" id="moveV">40</div></div>
@@ -186,7 +191,7 @@ button.btn.flat{padding:8px 12px;font-size:12px;border-radius:11px}
 
 <script>
 const $=id=>document.getElementById(id);
-const NOTE=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTE=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
 /* 모드(음계) 정의 — 인터벌 + 분위기 */
 const MODES={
   ionian:{ko:'아이오니안 (메이저)',iv:[0,2,4,5,7,9,11]},
@@ -241,7 +246,7 @@ const SUMWAVE={
 };
 const LAYERS=[['drone','드론'],['pad','패드'],['choir','합창'],['strings','로우 현악'],['gong','대형 공'],['bell','벨/볼'],['handpan','핸드팬'],['tingsha','띵샤'],['melody','멜로디'],['sub','서브'],['air','대기음'],['shimmer','샤이머']];
 
-function defaults(){return {mood:'drift',root:9,mode:'lydian',pace:9,len:3,space:70,bright:46,move:40,tuning:440,harmony:'evolving',binaural:'off',
+function defaults(){return {mood:'drift',root:10,mode:'lydian',pace:9,len:20,space:70,bright:46,move:40,tuning:440,harmony:'evolving',binaural:'off',
   solfeggio:'off',breath:'off',sleepMin:0,bellOct:0,tingOct:0,autoEvolve:false,sumwave:null,droneVoicing:'full',pulse:null,swOct:0,moon:false,
   layers:Object.assign({},MOODS.drift.layers),prog:MOODS.drift.prog.slice(),seed:(Math.random()*1e9)|0,loop:true};}
 let state=defaults();
