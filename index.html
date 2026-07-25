@@ -668,8 +668,28 @@ let breathAnchor=0;
 /* ---------- 룩어헤드 스케줄러 — 20초 창만 미리 예약, 3초마다 보충 ---------- */
 /* 전곡을 한 번에 만들면 렌더 그래프에 수천 노드가 동시 삽입돼 오디오 스레드가 굶는다.
    창 단위로 밀어 넣고 끝난 슬롯은 즉시 disconnect → 길이와 무관하게 노드 수가 일정하다. */
-const LOOKAHEAD=20, PUMP_MS=3000;
-let schedEvents=[],schedIdx=0,schedTimer=null;
+const LOOKAHEAD=45, PUMP_MS=3000; // 백그라운드 setInterval 스로틀(최대 ~1분) 대비 넉넉한 예약 창
+let schedEvents=[],schedIdx=0,schedTimer=null,wakeLock=null;
+
+/* ---------- 화면 켜짐 유지(wakeLock) + 백그라운드 복귀 대응 ---------- */
+/* 안드로이드는 화면을 끄면 wakeLock을 자동 해제하고, 백그라운드에선 setInterval을
+   스로틀한다. 화면이 다시 보이면 (1) wakeLock을 재요청하고 (2) 스케줄러를 즉시 보충해
+   밀린 룩어헤드 창을 메운다. */
+async function acquireWakeLock(){
+  if(!navigator.wakeLock)return;
+  try{ if(wakeLock)return; wakeLock=await navigator.wakeLock.request('screen');
+       wakeLock.addEventListener('release',()=>{wakeLock=null;}); }catch(e){wakeLock=null;}
+}
+function releaseWakeLock(){ if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;} }
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  if(playing||session){
+    acquireWakeLock();                                   // 화면 복귀 → wakeLock 재요청
+    if(ctx&&ctx.state==='suspended')ctx.resume();        // 잠든 오디오 깨우기
+    if(schedTimer)pumpScheduler();                       // 밀린 스케줄 창 즉시 보충
+  }
+});
+
 function pumpScheduler(){
   if(!ctx||!graph){return;}
   const now=ctx.currentTime, el=now-startAt;
@@ -721,6 +741,7 @@ function play(isLoop){
     setTimeout(()=>{try{oldGraph.master.disconnect();}catch(e){}},3800);
   }
   playing=true;$('play').textContent='정지';$('orbLabel').textContent='재생 중';$('glow').style.opacity='1';
+  acquireWakeLock(); // 재생 중 화면 켜짐 유지 — 화면 꺼짐에 의한 오디오 중단 방지
   let endSec=curPiece.lengthSec,sleepStop=false;
   if(sleepDeadline){const rem=(sleepDeadline-Date.now())/1000;
     if(rem<=curPiece.lengthSec+0.5){endSec=Math.max(2,rem);sleepStop=true;
@@ -745,7 +766,7 @@ function planSessionArc(lenMin){
     {t:T*0.90,   db:-90,fade:8,  phase:'P6 통합·나눔 (무드론)'}
   ];
 }
-let session=null,sessionTick=null,wakeLock=null;
+let session=null,sessionTick=null;
 function fmtMMSS(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
 /* 단계 전환 띵샤 큐 — 3타(2.2초 간격). 세션 게인을 우회해 P6 무드론에서도 들린다 */
 function scheduleTingshaCue(ac,cueG,at){
@@ -782,7 +803,7 @@ function startSession(){
   playing=true;$('play').textContent='정지';$('orbLabel').textContent='입장 대기';$('glow').style.opacity='1';
   $('swSession').textContent='세션 시작';
   $('swStatus').textContent='입장 대기 — 참가자가 앉으면 [세션 시작]을 탭하세요';
-  if(navigator.wakeLock){navigator.wakeLock.request('screen').then(w=>{wakeLock=w;}).catch(()=>{});}
+  acquireWakeLock();
   meterLoop();
   toast('입장 배경이 깔렸습니다 (-8dB)');
 }
@@ -823,13 +844,14 @@ function armSession(){
 }
 function endSessionState(){
   if(sessionTick){clearInterval(sessionTick);sessionTick=null;}
-  if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
+  releaseWakeLock();
   if(session){session=null;const b=$('swSession');if(b)b.textContent='세션 모드 시작';}
   const st=$('swStatus');if(st&&!st.textContent.includes('완료'))st.textContent='';
 }
 function stopAudio(silent){
   endSessionState();
   haltScheduler(0.9); // 마스터 페이드가 끝난 뒤 슬롯 정리
+  releaseWakeLock();  // 정지 시 화면 켜짐 유지 해제
   if(stopTimer){clearTimeout(stopTimer);stopTimer=null;}
   playing=false;if(!silent)sleepDeadline=null;
   if(ctx){try{graph&&graph.master.gain.cancelScheduledValues(ctx.currentTime);}catch(e){}
