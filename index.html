@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Orion's Breath — Sum Wave Sound Meditation</title>
+<title>DongKyung Breath — Sum Wave Sound Meditation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
@@ -105,8 +105,8 @@ button.btn.sm{flex:0 0 auto;min-width:0;padding:13px 16px}
 <canvas id="aurora"></canvas>
 <div class="wrap">
   <header>
-    <h1 class="brand">Orion&rsquo;s Breath</h1>
-    <div class="tag">Sum Wave &middot; Sound Meditation</div>
+    <h1 class="brand">DongKyung Breath</h1>
+    <div class="tag">Sound Meditation</div>
   </header>
 
   <div class="stage">
@@ -141,7 +141,7 @@ button.btn.sm{flex:0 0 auto;min-width:0;padding:13px 16px}
           <div class="row"><div class="lab">솔페지오</div><select id="solfeggio"><option value="off">없음</option><option value="396">396 Hz (해방)</option><option value="417">417 Hz (변화)</option><option value="528">528 Hz (치유)</option><option value="639">639 Hz (관계)</option><option value="741">741 Hz (정화)</option><option value="852">852 Hz (직관)</option></select></div>
         </div>
       </div>
-      <div class="subsec" id="swSec">
+      <div class="subsec closed" id="swSec">
         <div class="sh" id="swHead"><span>숨 웨이브 세션 드론 <span class="shz">(3악기 × 3테마)</span></span><span class="ch">▾</span></div>
         <div class="sbody">
           <div class="moods" id="swGrid" style="margin:6px 0 8px"></div>
@@ -149,14 +149,6 @@ button.btn.sm{flex:0 0 auto;min-width:0;padding:13px 16px}
           <div class="row"><div class="lab">세션 모드</div><select id="swLen"><option value="30">30분</option><option value="50" selected>50분</option><option value="70">70분</option></select><button class="bt" id="swSession">세션 모드 시작</button></div>
           <div class="row"><div class="lab">만월 스킨</div><label class="sw"><input type="checkbox" id="swMoon"><span class="knob"></span></label><span class="hint">고역이 열리고 잔향 꼬리가 길어집니다</span></div>
           <div id="swStatus" style="font-size:13px;color:var(--gold,#D8C39A);letter-spacing:.04em;min-height:18px;margin:2px 0 4px;"></div>
-        </div>
-      </div>
-      <div class="subsec" id="orbaSec">
-        <div class="sh" id="orbaHead"><span>명상 악기 <span class="shz">(Orba · MIDI 입력)</span></span><span class="ch">▾</span></div>
-        <div class="sbody">
-          <div class="row"><div class="lab">연결</div><button class="bt" id="instConnect">MIDI 연결</button><span id="instDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#D8C39A;opacity:.25;margin-left:8px;transition:opacity .15s"></span></div>
-          <div class="row"><div class="lab">악기</div><select id="instVoice"><option value="handpan" selected>핸드팬</option><option value="bowl">싱잉볼</option><option value="tingsha">띵샤</option><option value="gong">공</option></select><select id="instOct"><option value="-12">낮게</option><option value="0" selected>기본</option><option value="12">높게</option></select></div>
-          <div id="instStatus" style="font-size:12.5px;color:#8fa8c8;min-height:16px;margin:2px 0 4px;">스케일 잠금 — 어떤 패드를 눌러도 조성 안의 음만 울립니다</div>
         </div>
       </div>
       <div class="subsec" id="instSec">
@@ -746,93 +738,6 @@ function planSessionArc(lenMin){
     {t:T*0.68,   db:0,  fade:40, phase:'P5 사운드배스'},
     {t:T*0.90,   db:-90,fade:8,  phase:'P6 통합·나눔 (무드론)'}
   ];
-}
-/* ---------- 명상 악기 모드 — Orba 등 MIDI 컨트롤러를 명상 악기로 ---------- */
-/* 철학: 스케일 잠금. 어떤 패드를 눌러도 현재 조성의 펜타토닉 안으로 조용히 옮겨진다.
-   틀린 음이 존재하지 않는 악기 — "틀린 곳에 떨어지지 않습니다"의 하드웨어 구현. */
-const INST_VOICES={
-  bowl:{ko:'싱잉볼',bus:'bell',play:(ac,G,m,v)=>bellVoice(ac,G,ac.currentTime+0.005,m,7+v*4,(Math.random()*2-1)*0.3,instNoise(ac))},
-  handpan:{ko:'핸드팬',bus:'handpan',play:(ac,G,m,v)=>handpanVoice(ac,G,ac.currentTime+0.005,m,4+v*3,(Math.random()*2-1)*0.35)},
-  tingsha:{ko:'띵샤',bus:'tingsha',play:(ac,G,m,v)=>tingshaVoice(ac,G,ac.currentTime+0.005,Math.max(m,84),(Math.random()*2-1)*0.3)},
-  gong:{ko:'공',bus:'gong',play:(ac,G,m,v)=>gongVoice(ac,G,ac.currentTime+0.005,Math.min(m,46),0,instNoise(ac),0.5+v*0.5)}
-};
-let inst={on:false,access:null,device:null,voice:'handpan',oct:0,lastNote:null,space:null,graph:null,noiseBuf:null};
-function instNoise(ac){
-  if(!inst.noiseBuf||inst.noiseBuf.sampleRate!==ac.sampleRate){
-    const b=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);
-    const d=b.getChannelData(0);
-    for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-    inst.noiseBuf=b;
-  }
-  return inst.noiseBuf;
-}
-function instGraph(){
-  if(playing&&graph)return graph;
-  if(inst.graph)return inst.graph;
-  const ac=audioCtx();
-  inst.graph=buildGraph(ac);
-  inst.graph.master.gain.setValueAtTime(0.6,ac.currentTime);
-  return inst.graph;
-}
-/* 스케일 잠금 — 입력 피치클래스를 현재 조성 펜타토닉의 최근접 음으로 */
-function quantizeToScale(midi){
-  const base=MODES[state.mode]&&MODES[state.mode].iv.length<=5?MODES[state.mode].iv:MODES[state.mode==='pentaMaj'?'pentaMaj':'pentaMin'].iv;
-  const pcs=base.map(i=>(state.root+i)%12);
-  const pc=((midi%12)+12)%12;
-  let best=pcs[0],bd=99;
-  pcs.forEach(p=>{
-    let d=Math.abs(p-pc);d=Math.min(d,12-d);
-    if(d<bd||(d===bd&&p<best)){bd=d;best=p;}
-  });
-  let out=midi-pc+best;
-  if(best-pc>6)out-=12;
-  if(pc-best>6)out+=12;
-  return out;
-}
-function handleMidiMsg(data){
-  const st=data[0]&0xF0;
-  const ac=audioCtx();if(ac.state==='suspended')ac.resume();
-  const g=instGraph();
-  if(st===0x90&&data[2]>0){
-    const v=Math.max(0.18,Math.min(1,data[2]/127));
-    const m=quantizeToScale(data[1])+inst.oct;
-    const vc=INST_VOICES[inst.voice];
-    const vg=ac.createGain();vg.gain.value=v;
-    vg.connect(g.buses[vc.bus]||g.master);
-    vc.play(ac,vg,m,v);
-    inst.lastNote=m;
-    const dot=$('instDot');if(dot){dot.style.opacity='1';setTimeout(()=>{dot.style.opacity='0.25';},180);}
-  } else if(st===0xB0&&data[1]===1){
-    /* CC1 (Orba 틸트/모드휠) → 공간(리버브 웻) 스웰 */
-    const w=0.15+(data[2]/127)*0.6;
-    inst.space=w;
-    try{g.reverbWet.gain.setTargetAtTime(w,ac.currentTime,0.12);}catch(e){}
-  } else if(st===0xD0){
-    /* 채널 프레셔 (Orba 누름) → 밝기 부드럽게 */
-    const f=1200+(data[1]/127)*9000;
-    try{g.tone.frequency.setTargetAtTime(f,ac.currentTime,0.15);}catch(e){}
-  }
-}
-function connectMidi(){
-  if(!navigator.requestMIDIAccess){
-    $('instStatus').textContent='이 브라우저는 Web MIDI 미지원 — Mac/Android Chrome에서 열어주세요';
-    toast('Web MIDI 미지원 브라우저');return;
-  }
-  navigator.requestMIDIAccess({sysex:false}).then(acc=>{
-    inst.access=acc;inst.on=true;
-    const wire=()=>{
-      let name=null;
-      acc.inputs.forEach(inp=>{
-        inp.onmidimessage=e=>handleMidiMsg(e.data);
-        if(!name)name=inp.name;
-      });
-      inst.device=name;
-      $('instStatus').textContent=name?('연결됨: '+name+' — 스케일 잠금 활성'):'장치 대기 중 — Orba 전원을 켜고 페어링하세요';
-    };
-    wire();
-    acc.onstatechange=wire;
-    toast('MIDI 입력 활성 — 패드를 눌러보세요');
-  }).catch(e=>{$('instStatus').textContent='MIDI 권한 거부됨';});
 }
 let session=null,sessionTick=null,wakeLock=null;
 function fmtMMSS(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
@@ -1471,10 +1376,6 @@ $('swRoot').onchange=e=>{state.root=+e.target.value;state.seed=(Math.random()*1e
 $('swOct').onchange=e=>{state.swOct=+e.target.value;
   if(playing)play(false);};
 $('swSession').onclick=()=>{if(!session){startSession();}else if(session.mode==='standby'){armSession();}else{stopAudio();}};
-$('orbaHead').onclick=()=>$('orbaSec').classList.toggle('closed');
-$('instConnect').onclick=connectMidi;
-$('instVoice').onchange=e=>{inst.voice=e.target.value;toast(INST_VOICES[inst.voice].ko+' — 명상 악기 음색');};
-$('instOct').onchange=e=>{inst.oct=+e.target.value;};
 $('swMoon').onchange=e=>{state.moon=e.target.checked;
   if(state.sumwave)applySumwave(state.sumwave);
   toast(state.moon?'만월 스킨 — 고역·잔향 확장':'만월 스킨 해제');};
