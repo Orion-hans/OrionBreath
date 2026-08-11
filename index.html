@@ -286,14 +286,14 @@ function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a
 const scalePcs=()=>MODES[state.mode].iv.map(x=>(state.root+x)%12);
 // 모드 음계 위 다이어토닉 스택(루트·3·5·7) — 항상 음계 안
 function modalChord(deg){const iv=MODES[state.mode].iv,n=iv.length,pcs=[];for(const k of [0,2,4,6]){const i=(deg+k)%n;pcs.push((state.root+iv[i])%12);}return pcs;}
-function voiceLead(pcs,prev){let v=pcs.map((pc,i)=>{let m=60+pc;while(m<57)m+=12;return m;});
+function voiceLead(pcs,prev){let v=pcs.map((pc,i)=>{let m=48+pc;while(m<45)m+=12;return m;});
   // 펼친 보이싱(겹침 줄임) 후 이전 화음에 가깝게 옥타브 이동
   v=[...new Set(v)].sort((a,b)=>a-b);
   v=v.map((m,i)=>m+ (i>=2?0:0)); // base
-  // 레지스터 ~55..82
-  v=v.map(m=>{while(m>82)m-=12;while(m<55)m+=12;return m;});
+  // 레지스터 ~43..70 (한 옥타브 낮춤 — 기본 드론/패드가 높다는 피드백 반영)
+  v=v.map(m=>{while(m>70)m-=12;while(m<43)m+=12;return m;});
   if(prev&&prev.length){const center=prev.reduce((a,b)=>a+b,0)/prev.length;
-    v=v.map(m=>{let best=m,bd=1e9;for(let o=-12;o<=24;o+=12){const c=m+o;if(c>=52&&c<=84&&Math.abs(c-center)<bd){bd=Math.abs(c-center);best=c;}}return best;});}
+    v=v.map(m=>{let best=m,bd=1e9;for(let o=-12;o<=24;o+=12){const c=m+o;if(c>=40&&c<=72&&Math.abs(c-center)<bd){bd=Math.abs(c-center);best=c;}}return best;});}
   return [...new Set(v)].sort((a,b)=>a-b);
 }
 function generate(){
@@ -339,13 +339,13 @@ function generate(){
   if(state.droneVoicing&&state.droneVoicing!=='full'){
     pentaPc=state.droneVoicing==='root'?[state.root%12]:[state.root%12,(state.root+7)%12];
   }
-  const bellReg=p=>{let m=72+((p-state.root+12)%12);while(m<67)m+=12;while(m>88)m-=12;return m;};
+  const bellReg=p=>{let m=48+((p-state.root+12)%12);while(m<43)m+=12;while(m>64)m-=12;return m;};
   const bells=[];const dens=0.18+state.move/100*0.62;
   let bt=2+rng()*3, last=null;
   const md=MOODS[state.mood]?MOODS[state.mood].bellDecay:5;
   while(bt<lengthSec-1){
     let pc=pentaPc[(rng()*pentaPc.length)|0];let m=bellReg(pc);
-    if(last!=null){while(m-last>9)m-=12;while(last-m>9)m+=12;if(m<64)m+=12;if(m>89)m-=12;}
+    if(last!=null){while(m-last>9)m-=12;while(last-m>9)m+=12;if(m<40)m+=12;if(m>65)m-=12;}
     bells.push({t:bt,midi:m,decay:md*(0.8+rng()*0.5)});last=m;
     const gap=(1.4+rng()*4.0)/(0.5+dens); bt+=gap;
   }
@@ -356,8 +356,8 @@ function generate(){
 /* 멜로디 — 느리고 여백 있는 떠다니는 선율(긴 음 + 쉼) */
 function genMelody(rng,piece){
   const sc=piece.sc;
-  const inReg=m=>{while(m<66)m+=12;while(m>86)m-=12;return m;};
-  const fromPc=pc=>inReg(72+((pc-state.root+12)%12));
+  const inReg=m=>{while(m<54)m+=12;while(m>74)m-=12;return m;};
+  const fromPc=pc=>inReg(60+((pc-state.root+12)%12));
   const chordAt=t=>{for(let i=piece.chords.length-1;i>=0;i--)if(piece.chords[i].t<=t+1e-6)return piece.chords[i];return piece.chords[0];};
   const mel=[];let t=3+rng()*5,last=null;const open=1-state.move/100;
   while(t<piece.lengthSec-3){
@@ -452,11 +452,11 @@ function padVoice(ac,G,t,dur,midi,pan){
   const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
   const amp=ac.createGain();
   const atk=Math.min(3.2,dur*0.45),rel=Math.min(6,dur*0.7);
-  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.16,t+atk);
-  amp.gain.setValueAtTime(0.16,t+dur*0.7);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.13,t+atk);
+  amp.gain.setValueAtTime(0.13,t+dur*0.7);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
   lp.connect(amp);if(pn){amp.connect(pn);pn.connect(G);}else amp.connect(G);
   [-7,-3,4,8].forEach((dt,i)=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=f2m(midi);o.detune.value=dt;
-    const og=ac.createGain();og.gain.value=0.25;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+rel+0.1);});
+    const og=ac.createGain();og.gain.value=0.18;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+rel+0.1);});
 }
 function shimmerVoice(ac,G,t,dur,midi,pan){ // 옥타브 위 사인 패드(반짝임)
   const amp=ac.createGain();const atk=Math.min(4,dur*0.55),rel=Math.min(6,dur*0.7);
@@ -608,7 +608,8 @@ function solfeggioTone(ac,master,t,dur,hz){ // 솔페지오 치유 톤 — 순�
 
 // 레이어 on/off를 버스 게인으로 — 재생 중 실시간 토글 가능
 function applyLayerGains(graph,ramp){const L=state.layers,now=ctx?ctx.currentTime:0;
-  const set=(bus,on)=>{const g=graph.buses[bus].gain;if(ramp){g.cancelScheduledValues(now);g.setTargetAtTime(on?1:0,now,0.2);}else g.value=on?1:0;};
+  const LVL={pad:0.55}; // 레이어별 기본 음량 — 패드가 너무 강해서 낮춤
+  const set=(bus,on)=>{const tgt=on?(LVL[bus]!=null?LVL[bus]:1):0;const g=graph.buses[bus].gain;if(ramp){g.cancelScheduledValues(now);g.setTargetAtTime(tgt,now,0.2);}else g.value=tgt;};
   set('drone',!!L.drone);set('pad',!!L.pad);set('shimmer',!!L.shimmer);set('strings',!!L.strings);set('gong',!!L.gong);set('choir',!!L.choir);
   set('bell',!!L.bell);set('handpan',!!L.handpan);set('tingsha',!!L.tingsha);set('melody',!!L.melody);set('sub',!!L.sub);set('air',!!L.air);}
 
@@ -622,10 +623,10 @@ function buildEvents(piece){
       push(c.t,dPad+9,'pad',{dur:dPad,midi:m,pan:pan});
       if(i%2===0)push(c.t,dPad+8,'shimmer',{dur:dPad,midi:m,pan:-pan});});
     const dStr=c.dur+(ci<N-1?1.5:3.5); // 로우 현악(첼로)
-    [c.midis[0],c.midis[0]+7].forEach((m,i)=>{let lm=m;while(lm>54)lm-=12;while(lm<38)lm+=12;
+    [c.midis[0],c.midis[0]+7].forEach((m,i)=>{let lm=m;while(lm>42)lm-=12;while(lm<26)lm+=12;
       push(c.t,dStr+6,'cello',{dur:dStr,midi:lm,pan:i?0.32:-0.32});});
     const dCh=c.dur+(ci<N-1?1.6:3.5); // 합창(모음 패드)
-    [c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>64)lm-=12;while(lm<50)lm+=12;
+    [c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>52)lm-=12;while(lm<38)lm+=12;
       push(c.t,dCh+6,'choir',{dur:dCh,midi:lm,pan:i?0.28:-0.28});});
   });
   // 대형 공 — 들쭉날쭉 패턴(가끔 쿵쿵 연타), 깊은 저음
@@ -641,7 +642,7 @@ function buildEvents(piece){
     push(b.t,5,'handpan',{midi:b.midi+bo,decay:b.decay,pan:-pan});});
   // 띵샤 — 아주 드물게, 높은 음역(토닉 2옥타브 위·5도) + 음역 오프셋, 긴 여운
   const to=state.tingOct||0;let tt=12;
-  while(tt<piece.lengthSec-3){let m=piece.tonic+(Math.random()<0.5?24:31);while(m>100)m-=12;while(m<82)m+=12;
+  while(tt<piece.lengthSec-3){let m=piece.tonic+(Math.random()<0.5?24:31);while(m>76)m-=12;while(m<58)m+=12;
     push(tt,10,'tingsha',{midi:m+to,pan:(Math.random()*2-1)*0.4});tt+=40+Math.random()*24;}
   if(piece.melody)piece.melody.forEach((n,i)=>push(n.t,n.dur+5,'melody',{dur:n.dur,midi:n.midi,pan:((i*0.41)%1-0.5)*0.5}));
   ev.sort((a,b)=>a.t-b.t);
@@ -1256,14 +1257,14 @@ function exportMIDI(){const piece=generate();
       fades));
   }
   if(L.choir){
-    const ch=[];piece.chords.forEach(c=>[c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach(m=>{let lm=m;while(lm>64)lm-=12;while(lm<50)lm+=12;ch.push({t:c.t,dur:c.dur,midi:lm,vel:58});}));
+    const ch=[];piece.chords.forEach(c=>[c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach(m=>{let lm=m;while(lm>52)lm-=12;while(lm<38)lm+=12;ch.push({t:c.t,dur:c.dur,midi:lm,vel:58});}));
     tr.push(noteTrack(ch,8,53,
       'Alchemy (Vocal Pad · Oohs) | 합창 패드',
       DESC.choir,
       fades));
   }
   if(L.strings){
-    const st=[];piece.chords.forEach(c=>[c.midis[0],c.midis[0]+7].forEach(m=>{let lm=m;while(lm>54)lm-=12;while(lm<38)lm+=12;st.push({t:c.t,dur:c.dur,midi:lm,vel:64});}));
+    const st=[];piece.chords.forEach(c=>[c.midis[0],c.midis[0]+7].forEach(m=>{let lm=m;while(lm>42)lm-=12;while(lm<26)lm+=12;st.push({t:c.t,dur:c.dur,midi:lm,vel:64});}));
     tr.push(noteTrack(st,5,42,
       'Studio Strings (Legato) | 저역 현',
       DESC.strings,
@@ -1292,7 +1293,7 @@ function exportMIDI(){const piece=generate();
   }
   if(L.tingsha){
     const to=state.tingOct||0,tg=[];let tt=12;
-    while(tt<piece.lengthSec-3){let m=piece.tonic+24;while(m>100)m-=12;while(m<82)m+=12;tg.push({t:tt,dur:4,midi:m+to,vel:64});tt+=50;}
+    while(tt<piece.lengthSec-3){let m=piece.tonic+24;while(m>76)m-=12;while(m<58)m+=12;tg.push({t:tt,dur:4,midi:m+to,vel:64});tt+=50;}
     tr.push(noteTrack(tg,7,9,
       'Sampler (Finger Cymbals · Glockenspiel) | 띵샤',
       DESC.tingsha,
