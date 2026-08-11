@@ -504,16 +504,25 @@ function subVoice(ac,G,t,dur,rootMidi){const amp=ac.createGain();
   amp.connect(G);
   [0,6].forEach(dt=>{const o=ac.createOscillator();o.type='sine';o.frequency.value=f2m(rootMidi-12);o.detune.value=dt;o.connect(amp);o.start(t);o.stop(t+dur+0.2);}); // 미세 디튠 비팅
 }
-function celloVoice(ac,G,t,dur,midi,pan){ // 보잉 로우 스트링(첼로) — 따뜻한 시네마틱 저음/테너
-  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=0.7;const base=Math.min(1500+state.bright*8,f2m(midi)*5);
-  lp.frequency.setValueAtTime(base*0.5,t);lp.frequency.linearRampToValueAtTime(base,t+Math.min(2,dur*0.4));
-  const body=ac.createBiquadFilter();body.type='peaking';body.frequency.value=280;body.Q.value=0.9;body.gain.value=3;
+function celloVoice(ac,G,t,dur,midi,pan,noise){ // 보잉 로우 스트링(첼로) — 활 마찰·나무 바디 공명으로 패드와 구별
+  const base=Math.min(2600+state.bright*10,f2m(midi)*7); // 배음을 더 살려 톱니 패드와 차별
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.Q.value=0.8;
+  lp.frequency.setValueAtTime(base*0.42,t);lp.frequency.linearRampToValueAtTime(base,t+Math.min(2.2,dur*0.45)); // 활이 붙으며 밝아짐
+  // 나무 바디 공명 2개 — 첼로 몸통 울림
+  const b1=ac.createBiquadFilter();b1.type='peaking';b1.frequency.value=220;b1.Q.value=1.1;b1.gain.value=4;
+  const b2=ac.createBiquadFilter();b2.type='peaking';b2.frequency.value=400;b2.Q.value=1.3;b2.gain.value=3;
   const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
-  const amp=ac.createGain();const atk=Math.min(1.6,dur*0.35),rel=Math.min(4,dur*0.6);
-  amp.gain.setValueAtTime(0.0001,t);amp.gain.exponentialRampToValueAtTime(0.13,t+atk);amp.gain.setValueAtTime(0.13,t+dur*0.7);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel);
-  lp.connect(body);body.connect(amp);if(pn){amp.connect(pn);pn.connect(G);}else amp.connect(G);
+  const amp=ac.createGain();const atk=Math.min(2.0,dur*0.4),rel=Math.min(4,dur*0.6);
+  amp.gain.setValueAtTime(0.0001,t);amp.gain.linearRampToValueAtTime(0.13,t+atk);amp.gain.setValueAtTime(0.13,t+dur*0.7);amp.gain.exponentialRampToValueAtTime(0.0001,t+dur+rel); // 보잉: 선형으로 차오름
+  lp.connect(b1);b1.connect(b2);b2.connect(amp);if(pn){amp.connect(pn);pn.connect(G);}else amp.connect(G);
+  // 활 마찰 노이즈 — 현악기 정체성. 어택에 "쓱" + 지속 중 미세 러프니스
+  if(noise){const n=ac.createBufferSource();n.buffer=noise;n.loop=true;
+    const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=Math.min(3600,f2m(midi)*5);bp.Q.value=0.7;
+    const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=Math.min(1400,f2m(midi)*2.4); // 활 쓸림의 고역 성분
+    const ng=ac.createGain();ng.gain.setValueAtTime(0.0001,t);ng.gain.linearRampToValueAtTime(0.14,t+0.12);ng.gain.exponentialRampToValueAtTime(0.022,t+1.0);ng.gain.setValueAtTime(0.022,t+dur*0.7);ng.gain.linearRampToValueAtTime(0.0001,t+dur+rel*0.5);
+    n.connect(bp);bp.connect(hp);hp.connect(ng);ng.connect(amp);n.start(t);n.stop(t+dur+rel);}
   [-5,4].forEach(dt=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=f2m(midi);o.detune.value=dt;const og=ac.createGain();og.gain.value=0.3;o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+rel+0.1);
-    const vf=ac.createOscillator(),vd=ac.createGain();vf.type='sine';vf.frequency.value=4.6;vd.gain.setValueAtTime(0.0001,t);vd.gain.linearRampToValueAtTime(7,t+Math.min(1.5,dur*0.5));vf.connect(vd);vd.connect(o.detune);vf.start(t);vf.stop(t+dur+rel+0.1);});
+    const vf=ac.createOscillator(),vd=ac.createGain();vf.type='sine';vf.frequency.value=5.0;vd.gain.setValueAtTime(0.0001,t);vd.gain.linearRampToValueAtTime(8,t+Math.min(1.5,dur*0.5));vf.connect(vd);vd.connect(o.detune);vf.start(t);vf.stop(t+dur+rel+0.1);});
 }
 function bellVoice(ac,G,t,midi,decay,pan,noise){ // 싱잉볼/벨 — 말렛 어택 + 비조화 배음 + 비팅 + 긴 감쇠
   const pn=ac.createStereoPanner?ac.createStereoPanner():null;if(pn)pn.pan.value=pan;
@@ -609,7 +618,9 @@ function solfeggioTone(ac,master,t,dur,hz){ // 솔페지오 치유 톤 — 순�
 // 레이어 on/off를 버스 게인으로 — 재생 중 실시간 토글 가능
 function applyLayerGains(graph,ramp){const L=state.layers,now=ctx?ctx.currentTime:0;
   const LVL={pad:0.55}; // 레이어별 기본 음량 — 패드가 너무 강해서 낮춤
-  const set=(bus,on)=>{const tgt=on?(LVL[bus]!=null?LVL[bus]:1):0;const g=graph.buses[bus].gain;if(ramp){g.cancelScheduledValues(now);g.setTargetAtTime(tgt,now,0.2);}else g.value=tgt;};
+  const set=(bus,on)=>{const tgt=on?(LVL[bus]!=null?LVL[bus]:1):0;const g=graph.buses[bus].gain;
+    if(ramp){const cur=g.value;g.cancelScheduledValues(now);g.setValueAtTime(cur,now);g.linearRampToValueAtTime(tgt,now+0.14);} // 짧은 선형 램프 — 끊김 없이 즉시 반영
+    else g.value=tgt;};
   set('drone',!!L.drone);set('pad',!!L.pad);set('shimmer',!!L.shimmer);set('strings',!!L.strings);set('gong',!!L.gong);set('choir',!!L.choir);
   set('bell',!!L.bell);set('handpan',!!L.handpan);set('tingsha',!!L.tingsha);set('melody',!!L.melody);set('sub',!!L.sub);set('air',!!L.air);}
 
@@ -626,7 +637,7 @@ function buildEvents(piece){
     [c.midis[0],c.midis[0]+7].forEach((m,i)=>{let lm=m;while(lm>42)lm-=12;while(lm<26)lm+=12;
       push(c.t,dStr+6,'cello',{dur:dStr,midi:lm,pan:i?0.32:-0.32});});
     const dCh=c.dur+(ci<N-1?1.6:3.5); // 합창(모음 패드)
-    [c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>52)lm-=12;while(lm<38)lm+=12;
+    [c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>40)lm-=12;while(lm<26)lm+=12;
       push(c.t,dCh+6,'choir',{dur:dCh,midi:lm,pan:i?0.28:-0.28});});
   });
   // 대형 공 — 들쭉날쭉 패턴(가끔 쿵쿵 연타), 깊은 저음
@@ -664,7 +675,7 @@ function fireEvent(ac,g,e,t0,live){
   switch(e.k){
     case 'pad':     padVoice(ac,voiceSlot(ac,B.pad,end,live),t,e.dur,e.midi,e.pan);break;
     case 'shimmer': shimmerVoice(ac,voiceSlot(ac,B.shimmer,end,live),t,e.dur,e.midi,e.pan);break;
-    case 'cello':   celloVoice(ac,voiceSlot(ac,B.strings,end,live),t,e.dur,e.midi,e.pan);break;
+    case 'cello':   celloVoice(ac,voiceSlot(ac,B.strings,end,live),t,e.dur,e.midi,e.pan,g.noise);break;
     case 'choir':   choirVoice(ac,voiceSlot(ac,B.choir,end,live),t,e.dur,e.midi,e.pan,g.noise);break;
     case 'gong':    gongVoice(ac,voiceSlot(ac,B.gong,end,live),t,e.midi,e.pan,g.noise,e.lvl);break;
     case 'bell':    bellVoice(ac,voiceSlot(ac,B.bell,end,live),t,e.midi,e.decay,e.pan,g.noise);break;
@@ -672,6 +683,29 @@ function fireEvent(ac,g,e,t0,live){
     case 'tingsha': tingshaVoice(ac,voiceSlot(ac,B.tingsha,end,live),t,e.midi,e.pan);break;
     case 'melody':  melodyVoice(ac,voiceSlot(ac,B.melody,end,live),t,e.dur,e.midi,e.pan);break;
   }
+}
+
+/* 지속 레이어(드론·서브·에어)는 재생 시작 시 전체 길이로 예약돼, 끄면 버스 게인만 0이 되고
+   켜면 원래 흐르던 소리가 즉시 되살아난다. 화음 기반 레이어(pad·choir·cello·shimmer)는
+   화음마다 예약되므로, 켜는 순간 현재 화음의 보이스를 즉시 하나 울려 다음 화음까지 기다리지 않게 한다. */
+function layerToggleOn(key){
+  if(!playing||!ctx||!graph||!curPiece)return;
+  const chordKeys=['pad','choir','strings','shimmer'];
+  if(!chordKeys.includes(key))return; // 연속 레이어는 게인 복구만으로 즉시 반영
+  const el=ctx.currentTime-startAt;
+  // 현재 재생 중인 화음 찾기
+  let cur=null;for(const c of curPiece.chords){if(c.t<=el&&el<c.t+c.dur){cur=c;break;}}
+  if(!cur)return;
+  const remain=Math.max(2,(cur.t+cur.dur)-el+1.2); // 남은 지속 + 겹침
+  const t=ctx.currentTime+0.02, g=graph;
+  cur.midis.forEach((m,i)=>{const pan=(i/(cur.midis.length-1)-0.5)*0.7;
+    if(key==='pad')     padVoice(ctx,voiceSlot(ctx,g.buses.pad,t+remain+9,true),t,remain,m,pan);
+    if(key==='shimmer'&&i%2===0) shimmerVoice(ctx,voiceSlot(ctx,g.buses.shimmer,t+remain+8,true),t,remain,m,-pan);
+  });
+  if(key==='strings'){[cur.midis[0],cur.midis[0]+7].forEach((m,i)=>{let lm=m;while(lm>42)lm-=12;while(lm<26)lm+=12;
+    celloVoice(ctx,voiceSlot(ctx,g.buses.strings,t+remain+6,true),t,remain,lm,i?0.32:-0.32,g.noise);});}
+  if(key==='choir'){[cur.midis[0],cur.midis[Math.min(2,cur.midis.length-1)]].forEach((m,i)=>{let lm=m;while(lm>40)lm-=12;while(lm<26)lm+=12;
+    choirVoice(ctx,voiceSlot(ctx,g.buses.choir,t+remain+6,true),t,remain,lm,i?0.28:-0.28,g.noise);});}
 }
 
 /* ---------- 지속 레이어 — 길이와 무관하게 노드 수 고정 ---------- */
@@ -1257,7 +1291,7 @@ function exportMIDI(){const piece=generate();
       fades));
   }
   if(L.choir){
-    const ch=[];piece.chords.forEach(c=>[c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach(m=>{let lm=m;while(lm>52)lm-=12;while(lm<38)lm+=12;ch.push({t:c.t,dur:c.dur,midi:lm,vel:58});}));
+    const ch=[];piece.chords.forEach(c=>[c.midis[0],c.midis[Math.min(2,c.midis.length-1)]].forEach(m=>{let lm=m;while(lm>40)lm-=12;while(lm<26)lm+=12;ch.push({t:c.t,dur:c.dur,midi:lm,vel:58});}));
     tr.push(noteTrack(ch,8,53,
       'Alchemy (Vocal Pad · Oohs) | 합창 패드',
       DESC.choir,
@@ -1374,7 +1408,7 @@ function buildUI(){
   const r=$('root');r.innerHTML='';NOTE.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;r.appendChild(o);});r.value=state.root;
   const md=$('mode');md.innerHTML='';Object.entries(MODES).forEach(([id,m])=>{const o=document.createElement('option');o.value=id;o.textContent=m.ko;md.appendChild(o);});md.value=state.mode;
   const ly=$('layers');ly.innerHTML='';LAYERS.forEach(([k,ko])=>{const d=document.createElement('div');d.className='lyr'+(state.layers[k]?' on':'');d.dataset.k=k;
-    d.innerHTML=`<span class="dot"></span>${ko}`;d.onclick=()=>{state.layers[k]=!state.layers[k];d.classList.toggle('on',state.layers[k]);if(playing&&graph)applyLayerGains(graph,true);};ly.appendChild(d);});
+    d.innerHTML=`<span class="dot"></span>${ko}`;d.onclick=()=>{const wasOn=state.layers[k];state.layers[k]=!state.layers[k];d.classList.toggle('on',state.layers[k]);if(playing&&graph){applyLayerGains(graph,true);if(!wasOn&&state.layers[k])layerToggleOn(k);}};ly.appendChild(d);});
   syncVals();
 }
 function syncVals(){$('paceV').textContent=state.pace+'초';$('lenV').textContent=state.len+'분';$('spaceV').textContent=state.space;$('brightV').textContent=state.bright;$('moveV').textContent=state.move;
@@ -1527,7 +1561,7 @@ function padStrike(c){
   if(c.inst==='bowl')      bellVoice(ac,G,t,c.midi,7,c.pan,P.noise);
   else if(c.inst==='handpan') handpanVoice(ac,G,t,c.midi,4,c.pan);
   else if(c.inst==='tingsha') tingshaVoice(ac,G,t,c.midi,c.pan);
-  else if(c.inst==='cello')   celloVoice(ac,G,t,2.6,c.midi,c.pan);
+  else if(c.inst==='cello')   celloVoice(ac,G,t,2.6,c.midi,c.pan,P.noise);
   padRipple(c);
   litQuad(c.quad);
 }
@@ -1562,7 +1596,7 @@ function drawPadRips(){
 function padSustain(c){
   const ac=audioCtx(),P=padAudio(),G=P.inG,t=ac.currentTime+0.003;
   // 지속은 첼로/싱잉볼 계열이 자연스럽다 — 악기별 긴 발성
-  if(c.inst==='cello'){celloVoice(ac,G,t,5,c.midi,c.pan);}
+  if(c.inst==='cello'){celloVoice(ac,G,t,5,c.midi,c.pan,P.noise);}
   else if(c.inst==='bowl'){bellVoice(ac,G,t,c.midi,9,c.pan,P.noise);}
   else if(c.inst==='handpan'){handpanVoice(ac,G,t,c.midi,6,c.pan);}
   else {tingshaVoice(ac,G,t,c.midi,c.pan);}
