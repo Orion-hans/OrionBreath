@@ -423,11 +423,31 @@ function buildGraph(ac){
   const comp=ac.createDynamicsCompressor();comp.threshold.value=-20;comp.ratio.value=2.2;comp.attack.value=0.06;comp.release.value=0.45;
   const limiter=ac.createDynamicsCompressor();limiter.threshold.value=-3;limiter.ratio.value=20;limiter.attack.value=0.003;limiter.release.value=0.15;
   const sessionG=ac.createGain();sessionG.gain.value=1;
-  master.connect(sessionG);sessionG.connect(tone);tone.connect(lowcut);lowcut.connect(airsh);airsh.connect(sat);sat.connect(comp);comp.connect(limiter);limiter.connect(ac.destination);
+  // 무빙 필터 — 아주 느린 LFO로 컷오프가 숨쉬듯 열렸다 닫힘(앰비언트 정체성)
+  const mvf=ac.createBiquadFilter();mvf.type='lowpass';mvf.Q.value=0.6;
+  const mvfBase=3200, mvfDepth=1400;
+  mvf.frequency.value=mvfBase;
+  const mvfLfo=ac.createOscillator();mvfLfo.type='sine';mvfLfo.frequency.value=0.045; // ~22초 주기
+  const mvfLd=ac.createGain();mvfLd.gain.value=mvfDepth;mvfLfo.connect(mvfLd);mvfLd.connect(mvf.frequency);mvfLfo.start(0);
+  master.connect(sessionG);sessionG.connect(tone);tone.connect(mvf);mvf.connect(lowcut);lowcut.connect(airsh);airsh.connect(sat);sat.connect(comp);comp.connect(limiter);limiter.connect(ac.destination);
   const spaceAmt=state.space/100;
   const reverb=ac.createConvolver();reverb.buffer=makeImpulse(ac,3.5+spaceAmt*5.5,2.0,0.02+spaceAmt*0.04);
   const rhc=ac.createBiquadFilter();rhc.type='lowpass';rhc.frequency.value=5200;rhc.Q.value=0.5; // 리버브 테일 고역 컷(어둡게)
   const rg=ac.createGain();rg.gain.value=0.5+spaceAmt*0.6;reverb.connect(rhc);rhc.connect(rg);rg.connect(master);
+  // 피드백 딜레이 — 좌우 시간차 핑퐁 + 감쇠 피드백. 잔상이 리버브로 번져 공간에 녹아든다.
+  const dlyIn=ac.createGain();dlyIn.gain.value=1;
+  const dlyL=ac.createDelay(2.0),dlyR=ac.createDelay(2.0);
+  const beat=0.42+spaceAmt*0.22; // 공간감 클수록 느린 에코
+  dlyL.delayTime.value=beat;dlyR.delayTime.value=beat*1.5; // 좌우 엇박(핑퐁 느낌)
+  const fb=ac.createGain();fb.gain.value=0.36+spaceAmt*0.12; // 피드백 양(잔상 길이)
+  const dlyDamp=ac.createBiquadFilter();dlyDamp.type='lowpass';dlyDamp.frequency.value=2600; // 반복될수록 어두워짐(테이프 에코)
+  const dlyWet=ac.createGain();dlyWet.gain.value=0.5;
+  const panL=ac.createStereoPanner?ac.createStereoPanner():null, panR=ac.createStereoPanner?ac.createStereoPanner():null;
+  if(panL){panL.pan.value=-0.5;panR.pan.value=0.5;}
+  dlyIn.connect(dlyL);dlyIn.connect(dlyR);
+  dlyL.connect(dlyDamp);dlyR.connect(dlyDamp);dlyDamp.connect(fb);fb.connect(dlyL);fb.connect(dlyR); // 피드백 루프
+  if(panL){dlyL.connect(panL);dlyR.connect(panR);panL.connect(dlyWet);panR.connect(dlyWet);}else{dlyL.connect(dlyWet);dlyR.connect(dlyWet);}
+  dlyWet.connect(master);dlyWet.connect(reverb); // 에코 잔상도 리버브 통과
   const buses={};
   ['drone','pad','shimmer','bell','handpan','tingsha','sub','air','melody','strings','gong','choir'].forEach(k=>{const g=ac.createGain();g.gain.value=1;buses[k]=g;});
   // 저음 정리: 상위 레이어는 하이패스 → 드론+서브가 저음 독점(머드 제거)
@@ -454,7 +474,10 @@ function buildGraph(ac){
   // 리버브 센드(레이어별)
   const send=(bus,amt)=>{const s=ac.createGain();s.gain.value=amt;buses[bus].connect(s);s.connect(reverb);};
   send('pad',0.5+spaceAmt*0.4);send('shimmer',0.5);send('bell',0.6+spaceAmt*0.35);send('handpan',0.45+spaceAmt*0.3);send('tingsha',0.7+spaceAmt*0.2);send('air',0.5);send('drone',0.15+spaceAmt*0.2);send('melody',0.45+spaceAmt*0.35);send('strings',0.4+spaceAmt*0.3);send('gong',0.5+spaceAmt*0.3);send('choir',0.45+spaceAmt*0.3);
-  return {master,sessionG,reverb,reverbWet:rg,tone,buses,noise:makeNoise(ac)};
+  // 딜레이 센드 — 선율·타음 계열에만(패드·드론은 뭉개지므로 제외)
+  const dsend=(bus,amt)=>{const s=ac.createGain();s.gain.value=amt;buses[bus].connect(s);s.connect(dlyIn);};
+  dsend('melody',0.32);dsend('bell',0.26);dsend('handpan',0.24);dsend('tingsha',0.30);
+  return {master,sessionG,reverb,reverbWet:rg,tone,buses,noise:makeNoise(ac),mvf,dlyWet};
 }
 const toneFreq=()=>2000+Math.pow(state.bright/100,1.3)*16000; // 전역 톤(밝기) 실시간 컷오프
 // 음색 파라미터(밝기)
